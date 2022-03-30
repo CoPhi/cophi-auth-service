@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"html/template"
+	"io/fs"
 	"log"
 	"net/http"
 	"sync"
@@ -13,6 +14,9 @@ import (
 
 //go:embed templates/*
 var templates embed.FS
+
+//go:embed cophi-ui/*
+var dist embed.FS
 
 func main() {
 
@@ -31,8 +35,10 @@ func main() {
 
 	setupProviders()
 
-	http.Handle("/", &templateHandler{filename: "login.html"})
-	http.Handle("/app", mustAuth(&templateHandler{filename: "app.html"})) // TODO: replace with the actual application
+	http.Handle("/", mustAuth(http.FileServer(getFileSystem())))
+	http.Handle("/login", &templateHandler{filename: "login.html"})
+
+	// http.Handle("/app", mustAuth(&templateHandler{filename: "app.html"})) // TODO: replace with the actual application
 
 	// path must have provider as query parameter e.g. /login/oauth?provider=google
 	http.HandleFunc("/login/oauth", gothic.BeginAuthHandler)
@@ -59,4 +65,12 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		t.templ = template.Must(template.ParseFS(templates, "templates/"+t.filename))
 	})
 	t.templ.Execute(w, r)
+}
+
+func getFileSystem() http.FileSystem {
+	fsys, err := fs.Sub(dist, "cophi-ui")
+	if err != nil {
+		log.Fatal(err)
+	}
+	return http.FS(fsys)
 }

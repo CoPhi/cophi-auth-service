@@ -1,22 +1,23 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type authUser struct{ name, lastname, email string }
+type authHandler struct{ next http.Handler }
 
-func (u authUser) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
-		Name:  "auth",
-		Value: u.email + u.name + u.lastname,
-		Path:  "/",
-	})
+func authCallback(u *authUser) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.SetCookie(w, &http.Cookie{
+			Name:  "auth",
+			Value: u.email + u.name + u.lastname,
+			Path:  "/",
+		})
 
-	w.Header().Set("Location", "/app") // TODO: make /app redirection parametric
-	w.WriteHeader(http.StatusTemporaryRedirect)
-}
-
-type authHandler struct {
-	next http.Handler
+		w.Header().Set("Location", "/") // TODO: make /app redirection parametric to go back to the actual page
+		w.WriteHeader(http.StatusTemporaryRedirect)
+	}
 }
 
 func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

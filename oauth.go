@@ -28,18 +28,15 @@ func setupProviders() {
 }
 
 func oauthCallback(w http.ResponseWriter, r *http.Request) {
-	user, err := gothic.CompleteUserAuth(w, r)
+	oauthUser, err := gothic.CompleteUserAuth(w, r)
 	if err != nil {
 		fmt.Fprintln(w, err)
 		return
 	}
-
-	fmt.Println(user)
-	http.SetCookie(w, &http.Cookie{
-		Name:  "auth",
-		Value: user.Email + user.FirstName + user.LastName,
-		Path:  "/"})
-
-	w.Header().Set("Location", "/app")
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	user := authUser{
+		name:     oauthUser.FirstName,
+		lastname: oauthUser.LastName,
+		email:    oauthUser.Email,
+	}
+	authCallback(&user)(w, r)
 }

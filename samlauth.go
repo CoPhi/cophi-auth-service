@@ -18,7 +18,7 @@ func samlSPCallback(w http.ResponseWriter, r *http.Request) {
 		lastname: samlsp.AttributeFromContext(r.Context(), "sn"),
 		email:    samlsp.AttributeFromContext(r.Context(), "mail"),
 	}
-	user.ServeHTTP(w, r)
+	authCallback(&user)(w, r)
 }
 
 type safeSamlMiddleware struct {
