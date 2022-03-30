@@ -14,9 +14,9 @@ import (
 
 func samlSPCallback(w http.ResponseWriter, r *http.Request) {
 	user := authUser{
-		name:     samlsp.AttributeFromContext(r.Context(), "givenName"),
-		lastname: samlsp.AttributeFromContext(r.Context(), "sn"),
-		email:    samlsp.AttributeFromContext(r.Context(), "mail"),
+		Name:     samlsp.AttributeFromContext(r.Context(), "givenName"),
+		Lastname: samlsp.AttributeFromContext(r.Context(), "sn"),
+		Email:    samlsp.AttributeFromContext(r.Context(), "mail"),
 	}
 	authCallback(&user)(w, r)
 }

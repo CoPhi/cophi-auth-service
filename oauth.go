@@ -34,9 +34,9 @@ func oauthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user := authUser{
-		name:     oauthUser.FirstName,
-		lastname: oauthUser.LastName,
-		email:    oauthUser.Email,
+		Name:     oauthUser.FirstName,
+		Lastname: oauthUser.LastName,
+		Email:    oauthUser.Email,
 	}
 	authCallback(&user)(w, r)
 }
