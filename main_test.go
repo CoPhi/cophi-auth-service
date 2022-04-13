@@ -11,7 +11,7 @@ func TestServiceConfiguration(t *testing.T) {
 	securedPath := "/"
 	oauthProviders := []goth.Provider{}
 
-	var v AuthService = newInMemoryService(
+	var v AuthService = newAuthService(
 		serviceAPIKey,
 		securedPath,
 		oauthProviders,

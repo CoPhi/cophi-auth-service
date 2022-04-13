@@ -42,7 +42,7 @@ func createToken() {
 			ExpiresAt: expirationTime.Unix(),
 		},
 	}
-	var jwtKey = []byte("my_secret_key")
+	// var jwtKey = []byte("my_secret_key")
 
 	privateKey, _ := ioutil.ReadFile("RS256.key")
 	signKey, err := jwt.ParseRSAPrivateKeyFromPEM(privateKey)

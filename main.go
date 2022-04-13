@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"sync"
 
+	openapi "github.com/CoPhi/cophi-auth-service/go"
 	"github.com/google/uuid"
 	"github.com/markbates/goth/gothic"
 )
@@ -22,8 +23,13 @@ var templates embed.FS
 var dist embed.FS
 
 func main() {
+	log.Printf("Server started")
 
-	// setup service provider
+	DefaultApiService := openapi.NewDefaultApiService()
+	DefaultApiController := openapi.NewDefaultApiController(DefaultApiService)
+
+	router := openapi.NewRouter(DefaultApiController)
+
 	sp, err := NewSP(
 		"gsservice.cert",               // TODO embed?
 		"gsservice.key",                // TODO: embed?
@@ -38,23 +44,23 @@ func main() {
 
 	setupProviders()
 
-	http.Handle("/", mustAuth(http.FileServer(getFileSystem())))
-	http.Handle("/login", &templateHandler{filename: "login.html"})
+	//router.Handle("/", mustAuth(http.FileServer(getFileSystem())))
+	router.Handle("/login", &templateHandler{filename: "login.html"})
 
-	// http.Handle("/app", mustAuth(&templateHandler{filename: "app.html"})) // TODO: replace with the actual application
+	//router.Handle("/", mustAuth(&templateHandler{filename: "app.html"})) // TODO: replace with the actual application
 
 	// path must have provider as query parameter e.g. /login/oauth?provider=google
-	http.HandleFunc("/login/oauth", gothic.BeginAuthHandler)
-	http.HandleFunc("/callback/oauth", oauthCallback)
+	router.HandleFunc("/login/oauth", gothic.BeginAuthHandler)
+	router.HandleFunc("/callback/oauth", oauthCallback)
 
-	http.Handle("/saml/", sp)
-	http.Handle("/callback/saml", sp.RequireAccount(http.HandlerFunc(samlSPCallback)))
+	router.Handle("/saml/", sp)
+	router.Handle("/callback/saml", sp.RequireAccount(http.HandlerFunc(samlSPCallback)))
+
+	router.PathPrefix("/").Handler(mustAuth(http.FileServer(getFileSystem())))
 
 	// start the web server
-	log.Println("Starting web server")
-	if err := http.ListenAndServe(":8000", nil); err != nil {
-		log.Fatal("ListenAndServe:", err)
-	}
+	log.Println("Start listening")
+	log.Fatal(http.ListenAndServe(":8000", router))
 }
 
 func tokenGenerator() string {

@@ -1,0 +1,171 @@
+openapi: 3.0.1
+info:
+  title: GreekSchools Data Service API
+  version: 0.0.1
+servers:
+- url: https://auth.greekschools.eu:{port}/api/{basePath}
+  variables:
+    basePath:
+      default: v1
+    port:
+      default: "1234"
+paths:
+  # /users:
+  # /user/{id}:
+  /jwt/refresh:
+    description: Refresh an access token by presenting a valid refresh token
+    post:
+      security:
+        - jwtAuth: []
+      parameters:
+        - name: refresh_token
+          in: cookie
+          required: true
+          schema:
+            type: string
+        - name: access_token
+          in: cookie
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ok
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/token"
+        "400":
+          description: Bad Request
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+
+  /jwt/public-keys:
+    get:
+      responses:
+        "200":
+          description: Returns the public RSA key to validate JWTs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/publicKey"
+  /status:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+          description: OK
+  /revoke:
+    post:
+      security:
+        - apiKeyAuth: []  
+      parameters:
+        - name: api-key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json::
+            schema:
+              type:
+                object
+              properties:
+                refresh_token:
+                  type: string
+            example: 
+              refresh_token: aRxGGEpVawiUak6He367W3oeOfh73irw+1G1h1jc
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+components:
+  schemas:
+    token:
+      properties:
+        token:
+          type: string
+          format: JWT
+        refresh_token:
+          type: string
+      example:
+        token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        refresh_token: "E0czpESaoeGxQdaanF7cFYzfo-AnsnKaqhjlHpzcROcRD91j7rgVBw"
+    publicKey:
+      required:
+        - publicKey
+      properties:
+        publicKey:
+          type: string
+      example: 
+        publicKey: > 
+          -----BEGIN PUBLIC KEY-----
+          MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA6Hctf8HaKduMvhFgFnbj
+          jWGK0N74rbp4RmsEuBVzlpCLi55wJvFd2S80SDrsq1Z1IW7JGr+bDjQ+dvIld/u3
+          VPsBRtDcnh6X1WnjMwH4oeGIUc7tLZjpEEHvScs73KHIfhMs9u2XUAl5ATi6k+om
+          v3GJzDooqWiip/pZEI1BK+ebd5pc7VRg3jkyelIbQTcCSPX0i6Xj29C1AyUWbgY5
+          PTmrqXRgQBcz1vUFrr40zXRP1VoZvV5HCkfWmLqLIr7Q3ciWUq6hS2LnmDjMZE7v
+          HyVMlUMiOs4ac4cGy7LlkfhK8OCovniKC6kVD6jUtZKNzwPxcivGl9Na2ucQZ3qn
+          lWBcUTotPrR+zLoRi7LcV58JJC81oy8i4SitCI0RUpSux9PszqhDZxtT+dyGFmd/
+          SYK5ujFd33Qe8skcYNM40hRZtG+KyoGsBPUZZ3bKyTz5pvYuuPu2tm0VhdbzvXTU
+          hJV7jkMi5ip01VgUPr7EsicJ8yoHWHwqNjg7N3+gfwdV8d9WfhaTABulmVBk+lX3
+          Qvb64jWSUR46yMqiJMrguPY4Uc2O/E5qRzXkdm1d+8FeNaIsZei/PvoVD5Aav7rM
+          YEc2m3+KTzEoRG/2RiZfHz8mGxzOLMZgEuWYHdF0SubYLx9eGVav9TQvPXvzxvhp
+          NFxpV6c7Yvi8RFwzsn7Lpn8CAwEAAQ==
+          -----END PUBLIC KEY-----
+    error:
+      properties:
+        timestamp:
+          format: date-time
+          type: string
+        error:
+          example: Internal Server Error
+          type: string
+        message:
+          type: string
+        path:
+          example: /api/v1/units/
+          type: string
+      type: object
+    status:
+      example:
+        version: version
+        status: running
+      properties:
+        status:
+          enum:
+          - running
+          type: string
+        version:
+          type: string
+      required:
+      - status
+      - version
+      type: object
+    
+  securitySchemes:
+    jwtAuth:
+      scheme: bearer
+      type: http
+      bearerFormat: JWT
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-KEY
