@@ -4,6 +4,8 @@ go 1.18
 
 require (
 	github.com/crewjam/saml v0.4.6
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/google/uuid v1.3.0
 	github.com/markbates/goth v1.69.0
 )
 

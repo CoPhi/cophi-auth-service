@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"crypto/rand"
+	"crypto/sha256"
 	"embed"
 	"fmt"
 	"html/template"
@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/markbates/goth/gothic"
 )
 
@@ -57,9 +58,10 @@ func main() {
 }
 
 func tokenGenerator() string {
-	b := make([]byte, 4)
-	rand.Read(b)
-	return fmt.Sprintf("%x", b)
+	// b := make([]byte, 4)
+	// rand.Read(b)
+	// return fmt.Sprintf("%x", b)
+	return uuid.New().String()
 }
 
 type templateHandler struct {
@@ -81,4 +83,8 @@ func getFileSystem() http.FileSystem {
 		log.Fatal(err)
 	}
 	return http.FS(fsys)
+}
+
+func hash(s string) string {
+	return fmt.Sprintf("%x", sha256.Sum256([]byte(s)))
 }

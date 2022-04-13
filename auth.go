@@ -34,6 +34,7 @@ func authCallback(u *authUser) func(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: true,
 			Secure:   true,
 		})
+		w.Header().Set("Authorization", url.QueryEscape(string(data)))
 		w.Header().Set("Location", "/") // TODO: make /app redirection parametric to go back to the actual page
 		w.WriteHeader(http.StatusTemporaryRedirect)
 		w.Write(data)
