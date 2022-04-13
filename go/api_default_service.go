@@ -11,8 +11,8 @@ package openapi
 
 import (
 	"context"
-	"net/http"
 	"errors"
+	"net/http"
 )
 
 // DefaultApiService is a service that implements the logic for the DefaultApiServicer
@@ -26,7 +26,7 @@ func NewDefaultApiService() DefaultApiServicer {
 	return &DefaultApiService{}
 }
 
-// JwtPublicKeysGet - 
+// JwtPublicKeysGet -
 func (s *DefaultApiService) JwtPublicKeysGet(ctx context.Context) (ImplResponse, error) {
 	// TODO - update JwtPublicKeysGet with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -37,7 +37,7 @@ func (s *DefaultApiService) JwtPublicKeysGet(ctx context.Context) (ImplResponse,
 	return Response(http.StatusNotImplemented, nil), errors.New("JwtPublicKeysGet method not implemented")
 }
 
-// JwtRefreshPost - 
+// JwtRefreshPost -
 func (s *DefaultApiService) JwtRefreshPost(ctx context.Context, refreshToken string, accessToken string) (ImplResponse, error) {
 	// TODO - update JwtRefreshPost with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -54,7 +54,7 @@ func (s *DefaultApiService) JwtRefreshPost(ctx context.Context, refreshToken str
 	return Response(http.StatusNotImplemented, nil), errors.New("JwtRefreshPost method not implemented")
 }
 
-// RevokePost - 
+// RevokePost -
 func (s *DefaultApiService) RevokePost(ctx context.Context, apiKey string, inlineObject InlineObject) (ImplResponse, error) {
 	// TODO - update RevokePost with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
@@ -80,13 +80,11 @@ func (s *DefaultApiService) RevokePost(ctx context.Context, apiKey string, inlin
 	return Response(http.StatusNotImplemented, nil), errors.New("RevokePost method not implemented")
 }
 
-// StatusGet - 
+// StatusGet -
 func (s *DefaultApiService) StatusGet(ctx context.Context) (ImplResponse, error) {
 	// TODO - update StatusGet with the required logic for this service method.
 	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 
 	//TODO: Uncomment the next line to return response Response(200, Status{}) or use other options such as http.Ok ...
-	//return Response(200, Status{}), nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("StatusGet method not implemented")
+	return Response(200, Status{Status: "running", Version: "1.0.0"}), nil
 }
