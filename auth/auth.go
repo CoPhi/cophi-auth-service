@@ -1,22 +1,24 @@
-package main
+package auth
 
 import (
 	"encoding/json"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"time"
 
+	"github.com/CoPhi/cophi-auth-service/jwt"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 )
 
-type authUser struct {
-	Name     string `json:"name"`
-	Lastname string `json:"lastname"`
-	Email    string `json:"email"`
+type AuthUser struct {
+	Email    string `json:"email,omitempty"`
+	Name     string `json:"name,omitempty"`
+	LastName string `json:"lastname,omitempty"`
 }
 type authHandler struct{ next http.Handler }
 
-func authCallback(u *authUser) func(w http.ResponseWriter, r *http.Request) {
+func AuthCallback(u *AuthUser, privKey string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := json.Marshal(u)
 		if err != nil {
@@ -24,6 +26,11 @@ func authCallback(u *authUser) func(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		jwtToken, err := jwt.GenerateToken(u.Name, u.LastName, u.Email, 10*time.Minute, privKey)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 		http.SetCookie(w, &http.Cookie{
 			Name:  "auth",
 			Value: url.QueryEscape(string(data)),
@@ -31,7 +38,7 @@ func authCallback(u *authUser) func(w http.ResponseWriter, r *http.Request) {
 		})
 		http.SetCookie(w, &http.Cookie{
 			Name:     "gsauth",
-			Value:    randomString(32),
+			Value:    jwtToken,
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   true,
@@ -68,7 +75,7 @@ func (h *authHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.next.ServeHTTP(w, r)
 }
 
-func mustAuth(handler http.Handler) http.Handler {
+func MustAuth(handler http.Handler) http.Handler {
 	return &authHandler{next: handler}
 }
 
