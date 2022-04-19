@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/CoPhi/cophi-auth-service/auth"
 	openapi "github.com/CoPhi/cophi-auth-service/go"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 	"github.com/google/uuid"
@@ -63,12 +64,12 @@ func main() {
 
 	// path must have provider as query parameter e.g. /login/oauth?provider=google
 	router.HandleFunc("/login/oauth", gothic.BeginAuthHandler)
-	router.HandleFunc("/callback/oauth", oauthCallback)
+	router.HandleFunc("/callback/oauth", oauthCallback(privKey))
 
 	router.Handle("/saml/", sp)
-	router.Handle("/callback/saml", sp.RequireAccount(http.HandlerFunc(samlSPCallback)))
+	router.Handle("/callback/saml", sp.RequireAccount(http.HandlerFunc(samlSPCallback(privKey))))
 
-	router.PathPrefix("/").Handler(mustAuth(http.FileServer(getFileSystem())))
+	router.PathPrefix("/").Handler(auth.MustAuth(http.FileServer(getFileSystem())))
 
 	// start the web server
 	log.Println("Start listening")

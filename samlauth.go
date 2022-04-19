@@ -8,17 +8,20 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/CoPhi/cophi-auth-service/auth"
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
 )
 
-func samlSPCallback(w http.ResponseWriter, r *http.Request) {
-	user := authUser{
-		Name:     samlsp.AttributeFromContext(r.Context(), "givenName"),
-		Lastname: samlsp.AttributeFromContext(r.Context(), "sn"),
-		Email:    samlsp.AttributeFromContext(r.Context(), "mail"),
+func samlSPCallback(privKey string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := auth.AuthUser{
+			Name:     samlsp.AttributeFromContext(r.Context(), "givenName"),
+			LastName: samlsp.AttributeFromContext(r.Context(), "sn"),
+			Email:    samlsp.AttributeFromContext(r.Context(), "mail"),
+		}
+		auth.AuthCallback(&user, privKey)(w, r)
 	}
-	authCallback(&user)(w, r)
 }
 
 type safeSamlMiddleware struct {

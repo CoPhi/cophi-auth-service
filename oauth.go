@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/CoPhi/cophi-auth-service/auth"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
@@ -27,16 +28,18 @@ func setupProviders() {
 	)
 }
 
-func oauthCallback(w http.ResponseWriter, r *http.Request) {
-	oauthUser, err := gothic.CompleteUserAuth(w, r)
-	if err != nil {
-		fmt.Fprintln(w, err)
-		return
+func oauthCallback(privKey string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		oauthUser, err := gothic.CompleteUserAuth(w, r)
+		if err != nil {
+			fmt.Fprintln(w, err)
+			return
+		}
+		user := auth.AuthUser{
+			Email:    oauthUser.Email,
+			Name:     oauthUser.FirstName,
+			LastName: oauthUser.LastName,
+		}
+		auth.AuthCallback(&user, privKey)(w, r)
 	}
-	user := authUser{
-		Name:     oauthUser.FirstName,
-		Lastname: oauthUser.LastName,
-		Email:    oauthUser.Email,
-	}
-	authCallback(&user)(w, r)
 }
