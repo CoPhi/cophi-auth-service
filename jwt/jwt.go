@@ -43,7 +43,10 @@ func GenerateToken(name, lastname, email string, expirationTime time.Duration, p
 }
 
 func VerifyToken(token, pubKey string) (*jwt.Token, error) {
-	parsedToken, err := jwt.Parse(token, func(token *jwt.Token) (interface{}, error) { return pubKey, nil })
+	parser := jwt.Parser{
+		ValidMethods: []string{"RS256"},
+	}
+	parsedToken, err := parser.Parse(token, func(token *jwt.Token) (interface{}, error) { return pubKey, nil })
 
 	switch err.(type) {
 	case nil: // no error
