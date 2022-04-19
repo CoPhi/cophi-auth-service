@@ -1,12 +1,23 @@
 package refreshtoken
 
-import "time"
+import (
+	"crypto/rand"
+	"fmt"
+	"time"
+)
 
 type RefreshTokenStore interface {
 	Add(token string)
 	Update(token string)
 	Delete(token string)
 	Check(token string) bool
+}
+
+// Generate a new refresh token
+func New() string {
+	b := make([]byte, 64)
+	rand.Read(b)
+	return fmt.Sprintf("%x", b)
 }
 
 type inMemoryRefreshTokenStore struct {
