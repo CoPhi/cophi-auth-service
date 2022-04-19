@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+
+	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 )
 
 type authUser struct {
@@ -30,6 +32,13 @@ func authCallback(u *authUser) func(w http.ResponseWriter, r *http.Request) {
 		http.SetCookie(w, &http.Cookie{
 			Name:     "gsauth",
 			Value:    randomString(32),
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+		})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "gsrefresh",
+			Value:    refreshtoken.New(),
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   true,
