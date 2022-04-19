@@ -85,9 +85,5 @@ func (s *DefaultApiService) RevokePost(ctx context.Context, apiKey string, inlin
 
 // StatusGet -
 func (s *DefaultApiService) StatusGet(ctx context.Context) (ImplResponse, error) {
-	// TODO - update StatusGet with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, Status{}) or use other options such as http.Ok ...
 	return Response(200, Status{Status: "running", Version: "1.0.0"}), nil
 }
