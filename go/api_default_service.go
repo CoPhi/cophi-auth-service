@@ -13,17 +13,23 @@ import (
 	"context"
 	"errors"
 	"net/http"
+
+	refreshtoken "github.com/CoPhi/cophi-auth-service/refreshtoken"
 )
 
 // DefaultApiService is a service that implements the logic for the DefaultApiServicer
 // This service should implement the business logic for every endpoint for the DefaultApi API.
 // Include any external packages or services that will be required by this service.
 type DefaultApiService struct {
+	rtStore refreshtoken.RefreshTokenStore
+	privKey string
 }
 
 // NewDefaultApiService creates a default api service
-func NewDefaultApiService() DefaultApiServicer {
-	return &DefaultApiService{}
+func NewDefaultApiService(rtStore refreshtoken.RefreshTokenStore) DefaultApiServicer {
+	return &DefaultApiService{
+		rtStore: rtStore,
+	}
 }
 
 // JwtPublicKeysGet -

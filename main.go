@@ -10,8 +10,10 @@ import (
 	"log"
 	"net/http"
 	"sync"
+	"time"
 
 	openapi "github.com/CoPhi/cophi-auth-service/go"
+	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 	"github.com/google/uuid"
 	"github.com/markbates/goth/gothic"
 )
@@ -25,7 +27,9 @@ var dist embed.FS
 func main() {
 	log.Printf("Server started")
 
-	DefaultApiService := openapi.NewDefaultApiService()
+	DefaultApiService := openapi.NewDefaultApiService(
+		refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(7*24*time.Hour)),
+	)
 	DefaultApiController := openapi.NewDefaultApiController(DefaultApiService)
 
 	router := openapi.NewRouter(DefaultApiController)
