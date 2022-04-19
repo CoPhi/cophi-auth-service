@@ -24,10 +24,18 @@ var templates embed.FS
 //go:embed cophi-ui/*
 var dist embed.FS
 
+//go:embed RS256.key.pub
+var pubKey string // TODO: make env variable
+
+//go:embed RS256.key
+var privKey string // TODO: make env variable
+
 func main() {
 	log.Printf("Server started")
 
 	DefaultApiService := openapi.NewDefaultApiService(
+		pubKey,
+		privKey,
 		refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(7*24*time.Hour)),
 	)
 	DefaultApiController := openapi.NewDefaultApiController(DefaultApiService)

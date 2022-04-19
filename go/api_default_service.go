@@ -23,24 +23,21 @@ import (
 type DefaultApiService struct {
 	rtStore refreshtoken.RefreshTokenStore
 	privKey string
+	pubKey  string
 }
 
 // NewDefaultApiService creates a default api service
-func NewDefaultApiService(rtStore refreshtoken.RefreshTokenStore) DefaultApiServicer {
+func NewDefaultApiService(pubKey, privKey string, rtStore refreshtoken.RefreshTokenStore) DefaultApiServicer {
 	return &DefaultApiService{
+		pubKey:  pubKey,
+		privKey: privKey,
 		rtStore: rtStore,
 	}
 }
 
 // JwtPublicKeysGet -
 func (s *DefaultApiService) JwtPublicKeysGet(ctx context.Context) (ImplResponse, error) {
-	// TODO - update JwtPublicKeysGet with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, PublicKey{}) or use other options such as http.Ok ...
-	//return Response(200, PublicKey{}), nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("JwtPublicKeysGet method not implemented")
+	return Response(http.StatusOK, PublicKey{s.pubKey}), nil
 }
 
 // JwtRefreshPost -
