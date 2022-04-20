@@ -9,18 +9,19 @@ import (
 	"net/url"
 
 	"github.com/CoPhi/cophi-auth-service/auth"
+	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
 )
 
-func samlSPCallback(privKey string) func(w http.ResponseWriter, r *http.Request) {
+func samlSPCallback(privKey string, rts refreshtoken.RefreshTokenStore) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := auth.AuthUser{
 			Name:     samlsp.AttributeFromContext(r.Context(), "givenName"),
 			LastName: samlsp.AttributeFromContext(r.Context(), "sn"),
 			Email:    samlsp.AttributeFromContext(r.Context(), "mail"),
 		}
-		auth.AuthCallback(&user, privKey)(w, r)
+		auth.AuthCallback(rts, &user, privKey)(w, r)
 	}
 }
 

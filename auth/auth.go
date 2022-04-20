@@ -18,7 +18,7 @@ type AuthUser struct {
 }
 type authHandler struct{ next http.Handler }
 
-func AuthCallback(u *AuthUser, privKey string) func(w http.ResponseWriter, r *http.Request) {
+func AuthCallback(rts refreshtoken.RefreshTokenStore, u *AuthUser, privKey string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := json.Marshal(u)
 		if err != nil {
@@ -43,9 +43,11 @@ func AuthCallback(u *AuthUser, privKey string) func(w http.ResponseWriter, r *ht
 			HttpOnly: true,
 			Secure:   true,
 		})
+		rt := refreshtoken.New()
+		rts.Add(rt, u.Email)
 		http.SetCookie(w, &http.Cookie{
 			Name:     "gsrefresh",
-			Value:    refreshtoken.New(),
+			Value:    rt,
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   true,

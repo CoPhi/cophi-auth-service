@@ -34,19 +34,23 @@ func NewClaims(name, lastname, email string, expiration time.Duration) *Claims {
 }
 
 func GenerateToken(name, lastname, email string, expirationTime time.Duration, privateKey string) (string, error) {
-	signKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateKey))
+	pKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateKey))
 	if err != nil {
 		return "", err
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, NewClaims(name, lastname, email, expirationTime))
-	return token.SignedString(signKey)
+	return token.SignedString(pKey)
 }
 
-func VerifyToken(token, pubKey string) (*jwt.Token, error) {
+func VerifyToken(token string, pubKey string) (*jwt.Token, error) {
+	publicKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(pubKey))
+	if err != nil {
+		return nil, err
+	}
 	parser := jwt.Parser{
 		ValidMethods: []string{"RS256"},
 	}
-	parsedToken, err := parser.Parse(token, func(token *jwt.Token) (interface{}, error) { return pubKey, nil })
+	parsedToken, err := parser.ParseWithClaims(token, &Claims{}, func(token *jwt.Token) (interface{}, error) { return publicKey, nil })
 
 	switch err.(type) {
 	case nil: // no error
@@ -59,7 +63,7 @@ func VerifyToken(token, pubKey string) (*jwt.Token, error) {
 		vErr := err.(*jwt.ValidationError)
 		switch vErr.Errors {
 		case jwt.ValidationErrorExpired:
-			return nil, Expired
+			return parsedToken, Expired
 		}
 
 		return nil, Invalid

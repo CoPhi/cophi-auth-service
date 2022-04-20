@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/CoPhi/cophi-auth-service/auth"
+	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/gothic"
 	"github.com/markbates/goth/providers/google"
@@ -28,7 +29,7 @@ func setupProviders() {
 	)
 }
 
-func oauthCallback(privKey string) func(w http.ResponseWriter, r *http.Request) {
+func oauthCallback(privKey string, rts refreshtoken.RefreshTokenStore) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		oauthUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
@@ -40,6 +41,6 @@ func oauthCallback(privKey string) func(w http.ResponseWriter, r *http.Request) 
 			Name:     oauthUser.FirstName,
 			LastName: oauthUser.LastName,
 		}
-		auth.AuthCallback(&user, privKey)(w, r)
+		auth.AuthCallback(rts, &user, privKey)(w, r)
 	}
 }

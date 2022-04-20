@@ -34,10 +34,12 @@ var privKey string // TODO: make env variable
 func main() {
 	log.Printf("Server started")
 
+	rts := refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(5 * time.Hour))
+
 	DefaultApiService := openapi.NewDefaultApiService(
 		pubKey,
 		privKey,
-		refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(7*24*time.Hour)),
+		rts,
 	)
 	DefaultApiController := openapi.NewDefaultApiController(DefaultApiService)
 
@@ -64,10 +66,10 @@ func main() {
 
 	// path must have provider as query parameter e.g. /login/oauth?provider=google
 	router.HandleFunc("/login/oauth", gothic.BeginAuthHandler)
-	router.HandleFunc("/callback/oauth", oauthCallback(privKey))
+	router.HandleFunc("/callback/oauth", oauthCallback(privKey, rts))
 
 	router.Handle("/saml/", sp)
-	router.Handle("/callback/saml", sp.RequireAccount(http.HandlerFunc(samlSPCallback(privKey))))
+	router.Handle("/callback/saml", sp.RequireAccount(http.HandlerFunc(samlSPCallback(privKey, rts))))
 
 	router.PathPrefix("/").Handler(auth.MustAuth(http.FileServer(getFileSystem())))
 
