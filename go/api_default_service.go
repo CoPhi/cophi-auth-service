@@ -13,7 +13,9 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
+	"github.com/CoPhi/cophi-auth-service/jwt"
 	refreshtoken "github.com/CoPhi/cophi-auth-service/refreshtoken"
 )
 
@@ -42,19 +44,41 @@ func (s *DefaultApiService) JwtPublicKeysGet(ctx context.Context) (ImplResponse,
 
 // JwtRefreshPost -
 func (s *DefaultApiService) JwtRefreshPost(ctx context.Context, refreshToken string, accessToken string) (ImplResponse, error) {
-	// TODO - update JwtRefreshPost with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	path := "/jwt/refresh"
 
-	//TODO: Uncomment the next line to return response Response(200, Token{}) or use other options such as http.Ok ...
-	//return Response(200, Token{}), nil
+	// if !s.rtStore.Valid(refreshToken) { // TODO: return 401
+	// 	return Response(500, ModelError{Timestamp: time.Now(), Message: "Infalid refresh token", Error: "Invalid refresh token", Path: path}), nil
+	// }
+	token, err := jwt.VerifyToken(accessToken, s.pubKey)
+	switch err {
+	case nil: // Token is still valid
+		claims, ok := token.Claims.(*jwt.Claims)
+		if !ok {
+			return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: "malformed claims", Error: "malformed claims", Path: path}), nil
+		}
+		if !s.rtStore.IsOwner(refreshToken, claims.Email) {
+			return Response(http.StatusForbidden, ModelError{Timestamp: time.Now(), Message: "forbidden", Error: "forbidden", Path: path}), nil
+		}
 
-	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	//return Response(400, nil),nil
+		// TODO: update api to manage bad request if issued token is still valid and remove 400 response
+		return Response(http.StatusOK, Token{Token: accessToken, RefreshToken: refreshToken}), nil
 
-	//TODO: Uncomment the next line to return response Response(500, ModelError{}) or use other options such as http.Ok ...
-	//return Response(500, ModelError{}), nil
+	case jwt.Expired:
+		claims, ok := token.Claims.(*jwt.Claims)
+		if !ok {
+			return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: "malformed claims", Error: "malformed claims", Path: path}), nil
+		}
+		newToken, err := jwt.GenerateToken(claims.Name, claims.LastName, claims.Email, time.Minute, s.privKey) // TODO put expiration time as parameter in DeafaultApiService
+		if err != nil {
+			return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: err.Error(), Error: err.Error(), Path: path}), nil
+		}
+		s.rtStore.ExpirationTime(refreshToken)
+		return Response(http.StatusOK, Token{Token: newToken, RefreshToken: refreshToken}), nil
 
-	return Response(http.StatusNotImplemented, nil), errors.New("JwtRefreshPost method not implemented")
+	default:
+		return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: err.Error(), Error: err.Error(), Path: path}), nil
+
+	}
 }
 
 // RevokePost -
