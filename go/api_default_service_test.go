@@ -82,26 +82,7 @@ NFxpV6c7Yvi8RFwzsn7Lpn8CAwEAAQ==
 )
 
 func TestJwtRefreshPost(t *testing.T) {
-	/*
-		TODO: test
-		<JWT, RT, Proprietario>
-		<_, _, False> -> 403
-		<True, _ ,True> -> 200 Identity
-		<False, True, True> -> 200 New Token, extend rt expiration time
-		<False, False, True> -> 401 Require new login
-
-		Proprietario = user in JWT == user che ha generato RT
-	*/
 	rt := "valid-refresh-token"
-	// publicKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(pubKey))
-	// if err != nil {
-	// 	panic("TODO")
-	// }
-
-	// privKey, err := jwt.ParseRSAPrivateKeyFromPEM([]byte(privateKey))
-	// if err != nil {
-	// 	panic("TODO")
-	// }
 	validAccessToken, err := cophijwt.GenerateToken("test", "test_last", "testmail", time.Hour, privateKey)
 	if err != nil {
 		t.Error(err)
@@ -110,33 +91,34 @@ func TestJwtRefreshPost(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	expiredAccessToken, err := cophijwt.GenerateToken("test", "test_last", "testmail", 0, privateKey)
-	if err != nil {
-		t.Error(err)
-	}
+	expiredAccessToken := `eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InRlc3RtYWlsIiwibmFtZSI6InRlc3QiLCJsYXN0bmFtZSI6InRlc3RfbGFzdCIsImV4cCI6MTY1MDYxMjU0MH0.3XxSj9qhhCIibSRWU51TM58SJjGsUu39L6ism_GeSTK9ROqPxlgMu5nz3olvzLs_nxuBpZYseotxYQaSVco-PQKsXGcv6eZYzOE2o3ROT4Hcqpaf4P_Zliz0FgdipGDDlS6qMdXtGi0NVy3jGCx-RUfArh0rGJPHnkGSnZRnCfol3Z9c4DdcJRkmTCUbpFj61hECRRCF9DoY1JCCeEgteCaSUzzFeNbqfWptiK2J3XnDBhjW0bCDs-iD0Hmk6xqchehG59461BbVzjAAa8a59R8BGEMIoxd47GAnzlUknijYIVkyHapSgPd4D0eWi9CG9AOIkaJTVLWhZK5fWcW1Y88MWoepM0LrbcV4ltpZkIt7px_vOQbCrAwbKIaStGXBEhLZQCueRGeje-MQ-XWzxjgPXeauTdmZEv-BWbbviYnB-j_6ubU88D6qVq83GsvEQ243TMm_Ru01rrcMcPd7Y5q0BJv2RtCMOHLC3_YhuiFWHLkZ8oTMggbK-ZIsO5ftxombMwIeeeG5DswnxvQv6T0usm5kQsxQCbvy08E_LMk92YgRvhpbCCysc1RmCi_DvmUU-stbNbENAi5HVSyqIu8kwSo7JLt0cJG40PrjnypWMQhL0y20wZ1qNtHJFBa3UYXc49koM3nwx5E0HIFTuNuRDJC0F22qZFg4qnjGOnQ`
+
+	rts := refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(5 * time.Hour))
+	rts.Add(rt, "testmail")
+
+	expiredRts := refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(0))
+	expiredRts.Add(rt, "testmail")
 
 	tt := []struct {
 		token        string
 		refrestToken string
 		same         bool
 		expectedCode int
+		store        refreshtoken.RefreshTokenStore
 	}{
-		{validAccessToken, rt, true, http.StatusOK},
-		{otherAccessToken, rt, false, http.StatusForbidden},
-		{expiredAccessToken, rt, false, http.StatusOK},
-		{expiredAccessToken, "invalid or expired refreshtoken", false, http.StatusOK},
-		{expiredAccessToken, "invalid or expired refreshtoken", true, http.StatusUnauthorized},
+		{expiredAccessToken, rt, false, http.StatusUnauthorized, expiredRts},
+		{validAccessToken, rt, true, http.StatusOK, rts},
+		{otherAccessToken, rt, false, http.StatusForbidden, rts},
+		{expiredAccessToken, rt, false, http.StatusOK, rts},
+		{expiredAccessToken, "invalid or expired refreshtoken", false, http.StatusForbidden, rts},
 	}
 
-	rts := refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(5 * time.Hour))
-	rts.Add(rt, "testmail")
-
-	api := NewDefaultApiService(
-		pubKey,
-		privateKey,
-		rts,
-	)
 	for _, v := range tt {
+		api := NewDefaultApiService(
+			pubKey,
+			privateKey,
+			v.store,
+		)
 		got, err := api.JwtRefreshPost(context.Background(), v.refrestToken, v.token)
 		if err != nil {
 			t.Error(err)
@@ -144,7 +126,7 @@ func TestJwtRefreshPost(t *testing.T) {
 		if got.Code != v.expectedCode {
 			t.Errorf("Expected %v got %v", v.expectedCode, got.Code)
 		}
-		if got.Code == http.StatusOK && got.Body.(Token).Token != v.token {
+		if got.Code == http.StatusOK && v.same && got.Body.(Token).Token != v.token {
 			t.Errorf("Expected token %v and %v to be equal", got.Body.(Token).Token, v.token)
 		}
 	}

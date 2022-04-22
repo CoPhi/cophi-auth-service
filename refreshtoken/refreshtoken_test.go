@@ -70,8 +70,8 @@ func TestIsOwner(t *testing.T) {
 func TestNewRefreshToken(t *testing.T) {
 	token := refreshtoken.New()
 
-	if len([]byte(token)) != 64 {
-		t.Error("Unexpected token lenght")
+	if len([]byte(token)) != 128 {
+		t.Errorf("Unexpected token lenght: got %v expected %v", len(token), 128)
 	}
 }
 
