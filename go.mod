@@ -6,6 +6,7 @@ require (
 	github.com/crewjam/saml v0.4.6
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/google/uuid v1.3.0
+	github.com/gorilla/mux v1.6.2
 	github.com/markbates/goth v1.69.0
 )
 
@@ -16,7 +17,6 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.2.0 // indirect
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/gorilla/context v1.1.1 // indirect
-	github.com/gorilla/mux v1.6.2 // indirect
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/gorilla/sessions v1.1.1 // indirect
 	github.com/jonboulle/clockwork v0.2.2 // indirect

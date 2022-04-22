@@ -29,7 +29,7 @@ func setupProviders() {
 	)
 }
 
-func oauthCallback(privKey string, rts refreshtoken.RefreshTokenStore) func(w http.ResponseWriter, r *http.Request) {
+func oauthCallback(privKey string, rts refreshtoken.Store) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		oauthUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {

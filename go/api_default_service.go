@@ -23,13 +23,13 @@ import (
 // This service should implement the business logic for every endpoint for the DefaultApi API.
 // Include any external packages or services that will be required by this service.
 type DefaultApiService struct {
-	rtStore refreshtoken.RefreshTokenStore
+	rtStore refreshtoken.Store
 	privKey string
 	pubKey  string
 }
 
 // NewDefaultApiService creates a default api service
-func NewDefaultApiService(pubKey, privKey string, rtStore refreshtoken.RefreshTokenStore) DefaultApiServicer {
+func NewDefaultApiService(pubKey, privKey string, rtStore refreshtoken.Store) DefaultApiServicer {
 	return &DefaultApiService{
 		pubKey:  pubKey,
 		privKey: privKey,

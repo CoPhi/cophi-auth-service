@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-type RefreshTokenStore interface {
+type Store interface {
 	Add(token, userID string)
 	IsOwner(token, userID string) bool
 	ExtendValidity(token string)
@@ -33,7 +33,7 @@ type inMemoryRefreshTokenStore struct {
 
 type InMemoryTokenOption func(c *inMemoryRefreshTokenStore)
 
-func NewInMemoryTokenStore(opts ...func(s *inMemoryRefreshTokenStore)) RefreshTokenStore {
+func NewInMemoryTokenStore(opts ...func(s *inMemoryRefreshTokenStore)) Store {
 	s := &inMemoryRefreshTokenStore{
 		tokens: map[string]storeItem{},
 	}

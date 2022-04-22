@@ -104,7 +104,7 @@ func TestJwtRefreshPost(t *testing.T) {
 		refrestToken string
 		same         bool
 		expectedCode int
-		store        refreshtoken.RefreshTokenStore
+		store        refreshtoken.Store
 	}{
 		{expiredAccessToken, rt, false, http.StatusUnauthorized, expiredRts},
 		{validAccessToken, rt, true, http.StatusOK, rts},

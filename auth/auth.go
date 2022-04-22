@@ -18,7 +18,7 @@ type AuthUser struct {
 }
 type authHandler struct{ next http.Handler }
 
-func AuthCallback(rts refreshtoken.RefreshTokenStore, u *AuthUser, privKey string) func(w http.ResponseWriter, r *http.Request) {
+func AuthCallback(rts refreshtoken.Store, u *AuthUser, privKey string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		data, err := json.Marshal(u)
 		if err != nil {
@@ -26,7 +26,7 @@ func AuthCallback(rts refreshtoken.RefreshTokenStore, u *AuthUser, privKey strin
 			return
 		}
 
-		jwtToken, err := jwt.GenerateToken(u.Name, u.LastName, u.Email, 10*time.Minute, privKey)
+		jwtToken, err := jwt.GenerateToken(u.Name, u.LastName, u.Email, 10*time.Minute, privKey) // TODO: expiration time an env variable
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return

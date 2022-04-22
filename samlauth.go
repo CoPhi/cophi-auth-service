@@ -14,7 +14,7 @@ import (
 	"github.com/crewjam/saml/samlsp"
 )
 
-func samlSPCallback(privKey string, rts refreshtoken.RefreshTokenStore) func(w http.ResponseWriter, r *http.Request) {
+func samlSPCallback(privKey string, rts refreshtoken.Store) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := auth.AuthUser{
 			Name:     samlsp.AttributeFromContext(r.Context(), "givenName"),

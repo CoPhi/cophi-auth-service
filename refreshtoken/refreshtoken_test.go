@@ -9,7 +9,7 @@ import (
 
 func TestCreateStorage(t *testing.T) {
 
-	ss := []refreshtoken.RefreshTokenStore{
+	ss := []refreshtoken.Store{
 		refreshtoken.NewInMemoryTokenStore(),
 		refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(3 * time.Minute)),
 	}
