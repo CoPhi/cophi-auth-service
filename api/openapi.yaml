@@ -36,7 +36,13 @@ paths:
                 $ref: '#/components/schemas/token'
           description: Ok
         "400":
-          description: Bad Request
+          description: Bad Request for example issuing a valid token to be refreshed
+        "401":
+          description: Unauthorized when both access and refresh tokens expired and
+            they belong to the same owner
+        "403":
+          description: Forbidden when access and refresh tokens belong to different
+            users
         "500":
           content:
             application/json:

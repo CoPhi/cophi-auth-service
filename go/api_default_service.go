@@ -56,8 +56,6 @@ func (s *DefaultApiService) JwtRefreshPost(ctx context.Context, refreshToken str
 		if !s.rtStore.IsOwner(refreshToken, claims.Email) {
 			return Response(http.StatusForbidden, ModelError{Timestamp: time.Now(), Message: "forbidden", Error: "forbidden", Path: path}), nil
 		}
-
-		// TODO: update api to manage bad request if issued token is still valid and remove 400 response
 		return Response(http.StatusOK, Token{Token: accessToken, RefreshToken: refreshToken}), nil
 
 	case jwt.Expired:
