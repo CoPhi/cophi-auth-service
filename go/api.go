@@ -20,9 +20,10 @@ import (
 // The DefaultApiRouter implementation should parse necessary information from the http request,
 // pass the data to a DefaultApiServicer to perform the required actions, then write the service results to the http response.
 type DefaultApiRouter interface { 
+	ApplicationsGet(http.ResponseWriter, *http.Request)
+	ApplicationsIdDelete(http.ResponseWriter, *http.Request)
 	JwtPublicKeysGet(http.ResponseWriter, *http.Request)
 	JwtRefreshPost(http.ResponseWriter, *http.Request)
-	RevokePost(http.ResponseWriter, *http.Request)
 	StatusGet(http.ResponseWriter, *http.Request)
 }
 
@@ -32,8 +33,9 @@ type DefaultApiRouter interface {
 // while the service implementation can ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
 type DefaultApiServicer interface { 
+	ApplicationsGet(context.Context, string) (ImplResponse, error)
+	ApplicationsIdDelete(context.Context, string, string) (ImplResponse, error)
 	JwtPublicKeysGet(context.Context) (ImplResponse, error)
 	JwtRefreshPost(context.Context, string, string) (ImplResponse, error)
-	RevokePost(context.Context, string, InlineObject) (ImplResponse, error)
 	StatusGet(context.Context) (ImplResponse, error)
 }

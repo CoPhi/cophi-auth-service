@@ -66,36 +66,44 @@ paths:
               schema:
                 $ref: '#/components/schemas/status'
           description: OK
-  /revoke:
-    post:
-      security:
-        - apiKeyAuth: []  
+  /applications:
+    get:
       parameters:
         - name: api-key
           in: header
           required: true
           schema:
             type: string
-      requestBody:
-        content:
-          application/json::
-            schema:
-              type:
-                object
-              properties:
-                refresh_token:
-                  type: string
-            example: 
-              refresh_token: aRxGGEpVawiUak6He367W3oeOfh73irw+1G1h1jc
       responses:
         "200":
           description: OK
-        "400":
-          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
         "401":
           description: Unauthorized
-        "403":
-          description: Forbidden
+        "500":
+          description: Internal Server Error
+  /applications/{id}:
+    parameters:
+      - name: api-key
+        in: header
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          example: aRxGGEpVawiUak6He367W3oeOfh73irw+1G1h1jc
+    delete:
+      responses:
+        "200":
+          description: OK
         "404":
           description: Not Found
         "500":
@@ -139,10 +147,8 @@ components:
         timestamp:
           format: date-time
           type: string
-        error:
-          example: Internal Server Error
-          type: string
         message:
+          example: Internal Server Error
           type: string
         path:
           example: /api/v1/units/

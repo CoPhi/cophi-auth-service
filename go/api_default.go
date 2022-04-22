@@ -10,9 +10,10 @@
 package openapi
 
 import (
-	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 // DefaultApiController binds http requests to an api service and writes the service results to the http response
@@ -49,6 +50,18 @@ func NewDefaultApiController(s DefaultApiServicer, opts ...DefaultApiOption) Rou
 func (c *DefaultApiController) Routes() Routes {
 	return Routes{
 		{
+			"ApplicationsGet",
+			strings.ToUpper("Get"),
+			"/api/v1/applications",
+			c.ApplicationsGet,
+		},
+		{
+			"ApplicationsIdDelete",
+			strings.ToUpper("Delete"),
+			"/api/v1/applications/{id}",
+			c.ApplicationsIdDelete,
+		},
+		{
 			"JwtPublicKeysGet",
 			strings.ToUpper("Get"),
 			"/api/v1/jwt/public-keys",
@@ -61,18 +74,43 @@ func (c *DefaultApiController) Routes() Routes {
 			c.JwtRefreshPost,
 		},
 		{
-			"RevokePost",
-			strings.ToUpper("Post"),
-			"/api/v1/revoke",
-			c.RevokePost,
-		},
-		{
 			"StatusGet",
 			strings.ToUpper("Get"),
 			"/api/v1/status",
 			c.StatusGet,
 		},
 	}
+}
+
+// ApplicationsGet -
+func (c *DefaultApiController) ApplicationsGet(w http.ResponseWriter, r *http.Request) {
+	apiKeyParam := r.Header.Get("api-key")
+	result, err := c.service.ApplicationsGet(r.Context(), apiKeyParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
+}
+
+// ApplicationsIdDelete -
+func (c *DefaultApiController) ApplicationsIdDelete(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	apiKeyParam := r.Header.Get("api-key")
+	idParam := params["id"]
+
+	result, err := c.service.ApplicationsIdDelete(r.Context(), apiKeyParam, idParam)
+	// If an error occurred, encode the error with the status code
+	if err != nil {
+		c.errorHandler(w, r, err, &result)
+		return
+	}
+	// If no error, encode the body and the result code
+	EncodeJSONResponse(result.Body, &result.Code, w)
+
 }
 
 // JwtPublicKeysGet -
@@ -103,31 +141,6 @@ func (c *DefaultApiController) JwtRefreshPost(w http.ResponseWriter, r *http.Req
 		return
 	}
 	result, err := c.service.JwtRefreshPost(r.Context(), refreshTokenParam.Value, accessTokenParam.Value)
-	// If an error occurred, encode the error with the status code
-	if err != nil {
-		c.errorHandler(w, r, err, &result)
-		return
-	}
-	// If no error, encode the body and the result code
-	EncodeJSONResponse(result.Body, &result.Code, w)
-
-}
-
-// RevokePost -
-func (c *DefaultApiController) RevokePost(w http.ResponseWriter, r *http.Request) {
-	apiKeyParam := r.Header.Get("api-key")
-	inlineObjectParam := InlineObject{}
-	d := json.NewDecoder(r.Body)
-	d.DisallowUnknownFields()
-	if err := d.Decode(&inlineObjectParam); err != nil {
-		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
-		return
-	}
-	if err := AssertInlineObjectRequired(inlineObjectParam); err != nil {
-		c.errorHandler(w, r, err, nil)
-		return
-	}
-	result, err := c.service.RevokePost(r.Context(), apiKeyParam, inlineObjectParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

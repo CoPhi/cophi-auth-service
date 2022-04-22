@@ -17,8 +17,6 @@ type ModelError struct {
 
 	Timestamp time.Time `json:"timestamp,omitempty"`
 
-	Error string `json:"error,omitempty"`
-
 	Message string `json:"message,omitempty"`
 
 	Path string `json:"path,omitempty"`

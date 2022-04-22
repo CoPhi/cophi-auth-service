@@ -37,6 +37,40 @@ func NewDefaultApiService(pubKey, privKey string, rtStore refreshtoken.Store) De
 	}
 }
 
+// ApplicationsGet -
+func (s *DefaultApiService) ApplicationsGet(ctx context.Context, apiKey string) (ImplResponse, error) {
+	// TODO - update ApplicationsGet with the required logic for this service method.
+	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, []string{}) or use other options such as http.Ok ...
+	//return Response(200, []string{}), nil
+
+	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
+	//return Response(401, nil),nil
+
+	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
+	//return Response(500, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("ApplicationsGet method not implemented")
+}
+
+// ApplicationsIdDelete -
+func (s *DefaultApiService) ApplicationsIdDelete(ctx context.Context, apiKey string, id string) (ImplResponse, error) {
+	// TODO - update ApplicationsIdDelete with the required logic for this service method.
+	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+
+	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
+	//return Response(200, nil),nil
+
+	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
+	//return Response(404, nil),nil
+
+	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
+	//return Response(500, nil),nil
+
+	return Response(http.StatusNotImplemented, nil), errors.New("ApplicationsIdDelete method not implemented")
+}
+
 // JwtPublicKeysGet -
 func (s *DefaultApiService) JwtPublicKeysGet(ctx context.Context) (ImplResponse, error) {
 	return Response(http.StatusOK, PublicKey{s.pubKey}), nil
@@ -80,32 +114,6 @@ func (s *DefaultApiService) JwtRefreshPost(ctx context.Context, refreshToken str
 		return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: err.Error(), Error: err.Error(), Path: path}), nil
 
 	}
-}
-
-// RevokePost -
-func (s *DefaultApiService) RevokePost(ctx context.Context, apiKey string, inlineObject InlineObject) (ImplResponse, error) {
-	// TODO - update RevokePost with the required logic for this service method.
-	// Add api_default_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	//return Response(400, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(403, {}) or use other options such as http.Ok ...
-	//return Response(403, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	//return Response(404, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
-	//return Response(500, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("RevokePost method not implemented")
 }
 
 // StatusGet -
