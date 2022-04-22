@@ -45,11 +45,8 @@ func (s *DefaultApiService) JwtPublicKeysGet(ctx context.Context) (ImplResponse,
 // JwtRefreshPost -
 func (s *DefaultApiService) JwtRefreshPost(ctx context.Context, refreshToken string, accessToken string) (ImplResponse, error) {
 	path := "/jwt/refresh"
-
-	// if !s.rtStore.Valid(refreshToken) { // TODO: return 401
-	// 	return Response(500, ModelError{Timestamp: time.Now(), Message: "Infalid refresh token", Error: "Invalid refresh token", Path: path}), nil
-	// }
 	token, err := jwt.VerifyToken(accessToken, s.pubKey)
+
 	switch err {
 	case nil: // Token is still valid
 		claims, ok := token.Claims.(*jwt.Claims)
@@ -67,6 +64,12 @@ func (s *DefaultApiService) JwtRefreshPost(ctx context.Context, refreshToken str
 		claims, ok := token.Claims.(*jwt.Claims)
 		if !ok {
 			return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: "malformed claims", Error: "malformed claims", Path: path}), nil
+		}
+		if !s.rtStore.IsOwner(refreshToken, claims.Email) { // TODO: use user uuid instead of email
+			return Response(http.StatusForbidden, ModelError{Timestamp: time.Now(), Message: "forbidden", Error: "forbidden", Path: path}), nil
+		}
+		if !s.rtStore.Valid(refreshToken) {
+			return Response(http.StatusUnauthorized, ModelError{Timestamp: time.Now(), Message: "refresh token expired", Error: "refresh token expired", Path: path}), nil
 		}
 		newToken, err := jwt.GenerateToken(claims.Name, claims.LastName, claims.Email, time.Minute, s.privKey) // TODO put expiration time as parameter in DeafaultApiService
 		if err != nil {
