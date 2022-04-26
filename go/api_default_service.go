@@ -85,33 +85,33 @@ func (s *DefaultApiService) JwtRefreshPost(ctx context.Context, refreshToken str
 	case nil: // Token is still valid
 		claims, ok := token.Claims.(*jwt.Claims)
 		if !ok {
-			return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: "malformed claims", Error: "malformed claims", Path: path}), nil
+			return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: "malformed claims", Path: path}), nil
 		}
 		if !s.rtStore.IsOwner(refreshToken, claims.Email) {
-			return Response(http.StatusForbidden, ModelError{Timestamp: time.Now(), Message: "forbidden", Error: "forbidden", Path: path}), nil
+			return Response(http.StatusForbidden, ModelError{Timestamp: time.Now(), Message: "forbidden", Path: path}), nil
 		}
 		return Response(http.StatusOK, Token{Token: accessToken, RefreshToken: refreshToken}), nil
 
 	case jwt.Expired:
 		claims, ok := token.Claims.(*jwt.Claims)
 		if !ok {
-			return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: "malformed claims", Error: "malformed claims", Path: path}), nil
+			return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: "malformed claims", Path: path}), nil
 		}
 		if !s.rtStore.IsOwner(refreshToken, claims.Email) { // TODO: use user uuid instead of email
-			return Response(http.StatusForbidden, ModelError{Timestamp: time.Now(), Message: "forbidden", Error: "forbidden", Path: path}), nil
+			return Response(http.StatusForbidden, ModelError{Timestamp: time.Now(), Message: "forbidden", Path: path}), nil
 		}
 		if !s.rtStore.Valid(refreshToken) {
-			return Response(http.StatusUnauthorized, ModelError{Timestamp: time.Now(), Message: "refresh token expired", Error: "refresh token expired", Path: path}), nil
+			return Response(http.StatusUnauthorized, ModelError{Timestamp: time.Now(), Message: "refresh token expired", Path: path}), nil
 		}
 		newToken, err := jwt.GenerateToken(claims.Name, claims.LastName, claims.Email, time.Minute, s.privKey) // TODO put expiration time as parameter in DeafaultApiService
 		if err != nil {
-			return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: err.Error(), Error: err.Error(), Path: path}), nil
+			return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: err.Error(), Path: path}), nil
 		}
 		s.rtStore.ExpirationTime(refreshToken)
 		return Response(http.StatusOK, Token{Token: newToken, RefreshToken: refreshToken}), nil
 
 	default:
-		return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: err.Error(), Error: err.Error(), Path: path}), nil
+		return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: err.Error(), Path: path}), nil
 
 	}
 }
