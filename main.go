@@ -43,7 +43,10 @@ func main() {
 	)
 	DefaultApiController := openapi.NewDefaultApiController(DefaultApiService)
 
-	router := openapi.NewRouter(DefaultApiController)
+	UsersApiService := openapi.NewUsersApiService()
+	UsersApiController := openapi.NewUsersApiController(UsersApiService)
+
+	router := openapi.NewRouter(DefaultApiController, UsersApiController)
 
 	sp, err := NewSP(
 		"gsservice.cert",               // TODO embed?

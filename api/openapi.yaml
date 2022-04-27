@@ -10,6 +10,123 @@ servers:
     port:
       default: "1234"
 paths:
+  /users:
+    description: this API is accessible only through admin apikey, it is meant to
+      be a diagnostic API
+    get:
+      parameters:
+      - explode: false
+        in: header
+        name: api-key
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/user'
+                type: array
+          description: OK
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - users
+    post:
+      parameters:
+      - explode: false
+        in: header
+        name: api-key
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user'
+      responses:
+        "201":
+          description: OK
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      parameters:
+      - explode: false
+        in: header
+        name: api-key
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - users
+    description: this API is accessible only through admin apikey, it is meant to
+      be a diagnostic API
+    get:
+      parameters:
+      - explode: false
+        in: header
+        name: api-key
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: header
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+          description: Ok
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - users
   /jwt/refresh:
     description: Refresh an access token by presenting a valid refresh token
     post:
@@ -118,6 +235,15 @@ paths:
         "500":
           description: Internal Server Error
 components:
+  parameters:
+    apiKey:
+      explode: false
+      in: header
+      name: api-key
+      required: true
+      schema:
+        type: string
+      style: simple
   schemas:
     token:
       example:
@@ -164,6 +290,19 @@ components:
       required:
       - status
       - version
+      type: object
+    user:
+      example:
+        name: name
+        email: email
+        lastname: lastname
+      properties:
+        name:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
       type: object
   securitySchemes:
     jwtAuth:
