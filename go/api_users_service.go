@@ -11,97 +11,96 @@ package openapi
 
 import (
 	"context"
-	"net/http"
-	"errors"
+
+	"github.com/CoPhi/cophi-auth-service/apikey"
+	"github.com/CoPhi/cophi-auth-service/auth"
+	"github.com/CoPhi/cophi-auth-service/user"
 )
 
 // UsersApiService is a service that implements the logic for the UsersApiServicer
 // This service should implement the business logic for every endpoint for the UsersApi API.
 // Include any external packages or services that will be required by this service.
 type UsersApiService struct {
+	db     user.DB
+	apikey apikey.Store
 }
 
 // NewUsersApiService creates a default api service
-func NewUsersApiService() UsersApiServicer {
-	return &UsersApiService{}
+func NewUsersApiService(db user.DB, apikey apikey.Store) UsersApiServicer {
+	return &UsersApiService{
+		db:     db,
+		apikey: apikey,
+	}
 }
 
-// UsersGet - 
+func (s *UsersApiService) checkApikey(apikey string) (bool, ImplResponse, error) {
+	if apikey == "" {
+		return false, Response(401, nil), nil
+	}
+	if !s.apikey.IsOwner(apikey) {
+		return false, Response(403, nil), nil
+	}
+
+	return true, ImplResponse{}, nil
+}
+
+// UsersGet -
 func (s *UsersApiService) UsersGet(ctx context.Context, apiKey string) (ImplResponse, error) {
-	// TODO - update UsersGet with the required logic for this service method.
-	// Add api_users_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	if b, res, err := s.checkApikey(apiKey); !b {
+		return res, err
+	}
 
-	//TODO: Uncomment the next line to return response Response(201, []User{}) or use other options such as http.Ok ...
-	//return Response(201, []User{}), nil
+	us, err := s.db.List()
+	if err != nil {
+		return Response(500, nil), err
+	}
 
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(403, {}) or use other options such as http.Ok ...
-	//return Response(403, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
-	//return Response(500, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("UsersGet method not implemented")
+	return Response(201, us), nil
 }
 
-// UsersIdDelete - 
+// UsersIdDelete -
 func (s *UsersApiService) UsersIdDelete(ctx context.Context, apiKey string, id string) (ImplResponse, error) {
-	// TODO - update UsersIdDelete with the required logic for this service method.
-	// Add api_users_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	if b, res, err := s.checkApikey(apiKey); !b {
+		return res, err
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, {}) or use other options such as http.Ok ...
-	//return Response(200, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(403, {}) or use other options such as http.Ok ...
-	//return Response(403, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
-	//return Response(500, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("UsersIdDelete method not implemented")
+	s.db.Delete(id)
+	return Response(200, nil), nil
 }
 
-// UsersIdGet - 
+// UsersIdGet -
 func (s *UsersApiService) UsersIdGet(ctx context.Context, apiKey string, id string) (ImplResponse, error) {
-	// TODO - update UsersIdGet with the required logic for this service method.
-	// Add api_users_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+	if b, res, err := s.checkApikey(apiKey); !b {
+		return res, err
+	}
 
-	//TODO: Uncomment the next line to return response Response(200, User{}) or use other options such as http.Ok ...
-	//return Response(200, User{}), nil
+	u, err := s.db.GetByID(id)
+	if err != nil {
+		switch err {
+		case user.UserNotFound:
+			return Response(404, nil), err
+		default:
+			return Response(500, nil), err
+		}
+	}
 
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(403, {}) or use other options such as http.Ok ...
-	//return Response(403, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
-	//return Response(500, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("UsersIdGet method not implemented")
+	return Response(200, u), nil
 }
 
-// UsersPost - 
-func (s *UsersApiService) UsersPost(ctx context.Context, apiKey string, user User) (ImplResponse, error) {
-	// TODO - update UsersPost with the required logic for this service method.
-	// Add api_users_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
+// UsersPost -
+func (s *UsersApiService) UsersPost(ctx context.Context, apiKey string, us User) (ImplResponse, error) {
+	if b, res, err := s.checkApikey(apiKey); !b {
+		return res, err
+	}
 
-	//TODO: Uncomment the next line to return response Response(201, {}) or use other options such as http.Ok ...
-	//return Response(201, nil),nil
+	u := user.NewUser(auth.AuthUser{
+		Name: us.Name, LastName: us.Lastname, Email: us.Lastname,
+	})
 
-	//TODO: Uncomment the next line to return response Response(401, {}) or use other options such as http.Ok ...
-	//return Response(401, nil),nil
+	err := s.db.Add(u)
+	if err != nil {
+		return Response(500, nil), nil
+	}
 
-	//TODO: Uncomment the next line to return response Response(403, {}) or use other options such as http.Ok ...
-	//return Response(403, nil),nil
-
-	//TODO: Uncomment the next line to return response Response(500, {}) or use other options such as http.Ok ...
-	//return Response(500, nil),nil
-
-	return Response(http.StatusNotImplemented, nil), errors.New("UsersPost method not implemented")
+	return Response(201, nil), nil
 }
