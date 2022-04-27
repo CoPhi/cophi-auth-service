@@ -12,9 +12,11 @@ import (
 	"sync"
 	"time"
 
+	"github.com/CoPhi/cophi-auth-service/apikey"
 	"github.com/CoPhi/cophi-auth-service/auth"
 	openapi "github.com/CoPhi/cophi-auth-service/go"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
+	"github.com/CoPhi/cophi-auth-service/user"
 	"github.com/google/uuid"
 	"github.com/markbates/goth/gothic"
 )
@@ -43,7 +45,10 @@ func main() {
 	)
 	DefaultApiController := openapi.NewDefaultApiController(DefaultApiService)
 
-	UsersApiService := openapi.NewUsersApiService()
+	userdb := user.NewInMemoryDB()
+	apikeys := apikey.NewInMemoryStore("admin") // TODO: make key environment variable
+
+	UsersApiService := openapi.NewUsersApiService(userdb, apikeys)
 	UsersApiController := openapi.NewUsersApiController(UsersApiService)
 
 	router := openapi.NewRouter(DefaultApiController, UsersApiController)
