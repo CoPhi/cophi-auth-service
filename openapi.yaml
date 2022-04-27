@@ -47,6 +47,8 @@ paths:
           description: Unauthorized
         "403":
           description: Forbidden
+        "404":
+          description: Not Found
         "500":
           description: Internal Server Error
 
@@ -55,7 +57,7 @@ paths:
     parameters:
       - $ref: "#/components/parameters/apiKey"
       - name: id
-        in: header
+        in: path
         required: true
         schema:
           type:
