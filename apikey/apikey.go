@@ -1,31 +1,41 @@
 package apikey
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/google/uuid"
+)
 
 type Store interface {
-	Add(key, app string) error
+	Add(app string) (string, error)
 	Delete(key string)
 	Valid(key, app string) bool
+	IsOwner(key string) bool
 }
 
 type inMemoryApikeyStore struct {
-	data map[string]string
+	adminKey string
+	data     map[string]string
 }
 
 func NewInMemoryStore(adminKey string) Store {
 	return &inMemoryApikeyStore{
-		data: map[string]string{
-			adminKey: "admin",
-		},
+		data:     map[string]string{},
+		adminKey: "admin",
 	}
 }
 
-func (s *inMemoryApikeyStore) Add(key, app string) error {
+func (s *inMemoryApikeyStore) IsOwner(key string) bool {
+	return key == s.adminKey
+}
+
+func (s *inMemoryApikeyStore) Add(app string) (string, error) {
+	key := uuid.New().String()
 	if _, ok := s.data[key]; ok {
-		return errors.New("apikey is already present")
+		return "", errors.New("apikey is already present")
 	}
 	s.data[key] = app
-	return nil
+	return key, nil
 }
 
 func (s *inMemoryApikeyStore) Delete(key string) {
