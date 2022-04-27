@@ -9,27 +9,30 @@ import (
 
 func TestDB(t *testing.T) {
 	var db user.DB = user.NewInMemoryDB()
-	if len(db.List()) != 0 {
+	if us, err := db.List(); err != nil || len(us) != 0 {
 		t.Error("Empty DB should not contain users")
 	}
 
 	u := user.NewUser(auth.AuthUser{Email: "test@mail", Name: "test", LastName: "lastname"})
 	u2 := user.NewUser(auth.AuthUser{Email: "test2@mail", Name: "test2", LastName: "lastname2"})
 
-	if len(db.List()) != 0 {
+	if us, err := db.List(); err != nil || len(us) != 0 {
 		t.Error("db should be empty")
 	}
 
 	db.Add(u)
-	if len(db.List()) != 1 {
+	if us, err := db.List(); err != nil || len(us) != 1 {
 		t.Error("db should contain 1 user")
 	}
-	db.Add(u)
-	if len(db.List()) != 1 {
+	err := db.Add(u)
+	if err == nil {
+		t.Error("adding a user with the same id should generate an error")
+	}
+	if us, err := db.List(); err != nil || len(us) != 1 {
 		t.Error("db should contain 1 user")
 	}
 	db.Add(u2)
-	if len(db.List()) != 2 {
+	if us, err := db.List(); err != nil || len(us) != 2 {
 		t.Error("db should contain 2 users")
 	}
 	ug, err := db.GetByID(u.ID)
@@ -47,7 +50,7 @@ func TestDB(t *testing.T) {
 		t.Error("users should be the same")
 	}
 	db.Delete(u.ID)
-	if len(db.List()) != 1 {
+	if us, err := db.List(); err != nil || len(us) != 1 {
 		t.Error("db should contain 1 user")
 	}
 

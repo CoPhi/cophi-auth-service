@@ -7,10 +7,13 @@ import (
 	"github.com/google/uuid"
 )
 
-var UserNotFound = errors.New("user not found")
+var (
+	UserNotFound      = errors.New("user not found")
+	UserAlreadyPreset = errors.New("can't add a user with the same id of another")
+)
 
 type User struct {
-	ID string
+	ID string `json:"id"`
 	auth.AuthUser
 }
 
@@ -22,11 +25,11 @@ func NewUser(u auth.AuthUser) User {
 }
 
 type DB interface {
-	Add(u User)
+	Add(u User) error
 	Delete(id string)
 	GetByID(id string) (User, error)
 	GetByEmail(email string) (User, error)
-	List() []User
+	List() ([]User, error)
 }
 
 type inMemoryDB map[string]User
@@ -35,11 +38,12 @@ func NewInMemoryDB() DB {
 	return inMemoryDB{}
 }
 
-func (db inMemoryDB) Add(u User) {
+func (db inMemoryDB) Add(u User) error {
 	if _, ok := db[u.ID]; ok {
-		return
+		return UserAlreadyPreset
 	}
 	db[u.ID] = u
+	return nil
 }
 
 func (db inMemoryDB) Delete(id string) {
@@ -63,10 +67,10 @@ func (db inMemoryDB) GetByEmail(email string) (User, error) {
 	return User{}, UserNotFound
 }
 
-func (db inMemoryDB) List() []User {
+func (db inMemoryDB) List() ([]User, error) {
 	users := []User{}
 	for _, u := range db {
 		users = append(users, u)
 	}
-	return users
+	return users, nil
 }
