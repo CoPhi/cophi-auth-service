@@ -13,11 +13,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 // UsersApiController binds http requests to an api service and writes the service results to the http response
 type UsersApiController struct {
-	service      UsersApiServicer
+	service UsersApiServicer
 	errorHandler ErrorHandler
 }
 
@@ -47,7 +49,7 @@ func NewUsersApiController(s UsersApiServicer, opts ...UsersApiOption) Router {
 
 // Routes returns all of the api route for the UsersApiController
 func (c *UsersApiController) Routes() Routes {
-	return Routes{
+	return Routes{ 
 		{
 			"UsersGet",
 			strings.ToUpper("Get"),
@@ -75,7 +77,7 @@ func (c *UsersApiController) Routes() Routes {
 	}
 }
 
-// UsersGet -
+// UsersGet - 
 func (c *UsersApiController) UsersGet(w http.ResponseWriter, r *http.Request) {
 	apiKeyParam := r.Header.Get("api-key")
 	result, err := c.service.UsersGet(r.Context(), apiKeyParam)
@@ -89,10 +91,12 @@ func (c *UsersApiController) UsersGet(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// UsersIdDelete -
+// UsersIdDelete - 
 func (c *UsersApiController) UsersIdDelete(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
 	apiKeyParam := r.Header.Get("api-key")
-	idParam := r.Header.Get("id")
+	idParam := params["id"]
+	
 	result, err := c.service.UsersIdDelete(r.Context(), apiKeyParam, idParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
@@ -104,10 +108,12 @@ func (c *UsersApiController) UsersIdDelete(w http.ResponseWriter, r *http.Reques
 
 }
 
-// UsersIdGet -
+// UsersIdGet - 
 func (c *UsersApiController) UsersIdGet(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
 	apiKeyParam := r.Header.Get("api-key")
-	idParam := r.Header.Get("id")
+	idParam := params["id"]
+	
 	result, err := c.service.UsersIdGet(r.Context(), apiKeyParam, idParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
@@ -119,7 +125,7 @@ func (c *UsersApiController) UsersIdGet(w http.ResponseWriter, r *http.Request) 
 
 }
 
-// UsersPost -
+// UsersPost - 
 func (c *UsersApiController) UsersPost(w http.ResponseWriter, r *http.Request) {
 	apiKeyParam := r.Header.Get("api-key")
 	userParam := User{}
