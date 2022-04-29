@@ -17,6 +17,7 @@ import (
 	openapi "github.com/CoPhi/cophi-auth-service/go"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 	"github.com/CoPhi/cophi-auth-service/user"
+	"github.com/go-chi/cors"
 	"github.com/google/uuid"
 	"github.com/markbates/goth/gothic"
 )
@@ -81,8 +82,14 @@ func main() {
 
 	router.PathPrefix("/").Handler(auth.MustAuth(http.FileServer(getFileSystem())))
 
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:4200"}, // TODO: make this parametric on env
+		AllowCredentials: true,
+	})
+
 	// start the web server
 	log.Println("Start listening")
+	log.Fatal(http.ListenAndServe(":8000", c.Handler(router)))
 }
 
 // TODO: check if a cookie for the host should be set explicitly in case of sharing cookies between x.domain.com, domain.com, y.domain.com
