@@ -73,7 +73,7 @@ func main() {
 	//router.Handle("/", mustAuth(&templateHandler{filename: "app.html"})) // TODO: replace with the actual application
 
 	// path must have provider as query parameter e.g. /login/oauth?provider=google
-	router.HandleFunc("/login/oauth", gothic.BeginAuthHandler)
+	router.HandleFunc("/login/oauth", setReturnURL(gothic.BeginAuthHandler))
 	router.HandleFunc("/callback/oauth", oauthCallback(privKey, rts))
 
 	router.Handle("/saml/", sp)
@@ -83,7 +83,23 @@ func main() {
 
 	// start the web server
 	log.Println("Start listening")
-	log.Fatal(http.ListenAndServe(":8000", router))
+}
+
+// TODO: check if a cookie for the host should be set explicitly in case of sharing cookies between x.domain.com, domain.com, y.domain.com
+
+func setReturnURL(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("url:", r.URL.Query().Get("url"))
+		http.SetCookie(w, &http.Cookie{
+			Name:     "referer",
+			Value:    r.URL.Query().Get("url"),
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+		})
+
+		next.ServeHTTP(w, r)
+	}
 }
 
 func tokenGenerator() string {
