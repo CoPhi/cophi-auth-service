@@ -77,7 +77,7 @@ func (s *DefaultApiService) JwtPublicKeysGet(ctx context.Context) (ImplResponse,
 }
 
 // JwtRefreshPost -
-func (s *DefaultApiService) JwtRefreshPost(ctx context.Context, refreshToken string, accessToken string) (ImplResponse, error) {
+func (s *DefaultApiService) JwtRefreshPost(ctx context.Context, refreshToken string, accessToken string, w http.ResponseWriter) (ImplResponse, error) {
 	path := "/jwt/refresh"
 	token, err := jwt.VerifyToken(accessToken, s.pubKey)
 
@@ -108,6 +108,13 @@ func (s *DefaultApiService) JwtRefreshPost(ctx context.Context, refreshToken str
 			return Response(http.StatusInternalServerError, ModelError{Timestamp: time.Now(), Message: err.Error(), Path: path}), nil
 		}
 		s.rtStore.ExpirationTime(refreshToken)
+
+		http.SetCookie(w, &http.Cookie{
+			Name:   "access_token",
+			Value:  newToken,
+			Path:   "/",
+			Secure: true,
+		})
 		return Response(http.StatusOK, Token{Token: newToken, RefreshToken: refreshToken}), nil
 
 	default:

@@ -140,7 +140,7 @@ func (c *DefaultApiController) JwtRefreshPost(w http.ResponseWriter, r *http.Req
 		c.errorHandler(w, r, err, &result)
 		return
 	}
-	result, err := c.service.JwtRefreshPost(r.Context(), refreshTokenParam.Value, accessTokenParam.Value)
+	result, err := c.service.JwtRefreshPost(r.Context(), refreshTokenParam.Value, accessTokenParam.Value, w)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

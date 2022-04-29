@@ -14,47 +14,44 @@ import (
 	"net/http"
 )
 
-
-
 // DefaultApiRouter defines the required methods for binding the api requests to a responses for the DefaultApi
 // The DefaultApiRouter implementation should parse necessary information from the http request,
 // pass the data to a DefaultApiServicer to perform the required actions, then write the service results to the http response.
-type DefaultApiRouter interface { 
+type DefaultApiRouter interface {
 	ApplicationsGet(http.ResponseWriter, *http.Request)
 	ApplicationsIdDelete(http.ResponseWriter, *http.Request)
 	JwtPublicKeysGet(http.ResponseWriter, *http.Request)
 	JwtRefreshPost(http.ResponseWriter, *http.Request)
 	StatusGet(http.ResponseWriter, *http.Request)
 }
+
 // UsersApiRouter defines the required methods for binding the api requests to a responses for the UsersApi
 // The UsersApiRouter implementation should parse necessary information from the http request,
 // pass the data to a UsersApiServicer to perform the required actions, then write the service results to the http response.
-type UsersApiRouter interface { 
+type UsersApiRouter interface {
 	UsersGet(http.ResponseWriter, *http.Request)
 	UsersIdDelete(http.ResponseWriter, *http.Request)
 	UsersIdGet(http.ResponseWriter, *http.Request)
 	UsersPost(http.ResponseWriter, *http.Request)
 }
 
-
 // DefaultApiServicer defines the api actions for the DefaultApi service
 // This interface intended to stay up to date with the openapi yaml used to generate it,
 // while the service implementation can ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
-type DefaultApiServicer interface { 
+type DefaultApiServicer interface {
 	ApplicationsGet(context.Context, string) (ImplResponse, error)
 	ApplicationsIdDelete(context.Context, string, string) (ImplResponse, error)
 	JwtPublicKeysGet(context.Context) (ImplResponse, error)
-	JwtRefreshPost(context.Context, string, string) (ImplResponse, error)
+	JwtRefreshPost(context.Context, string, string, http.ResponseWriter) (ImplResponse, error)
 	StatusGet(context.Context) (ImplResponse, error)
 }
-
 
 // UsersApiServicer defines the api actions for the UsersApi service
 // This interface intended to stay up to date with the openapi yaml used to generate it,
 // while the service implementation can ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
-type UsersApiServicer interface { 
+type UsersApiServicer interface {
 	UsersGet(context.Context, string) (ImplResponse, error)
 	UsersIdDelete(context.Context, string, string) (ImplResponse, error)
 	UsersIdGet(context.Context, string, string) (ImplResponse, error)
