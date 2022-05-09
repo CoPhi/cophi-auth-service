@@ -3,6 +3,7 @@ package openapi
 import (
 	"context"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 
@@ -119,7 +120,8 @@ func TestJwtRefreshPost(t *testing.T) {
 			privateKey,
 			v.store,
 		)
-		got, err := api.JwtRefreshPost(context.Background(), v.refrestToken, v.token)
+		w := httptest.NewRecorder()
+		got, err := api.JwtRefreshPost(context.Background(), v.refrestToken, v.token, w)
 		if err != nil {
 			t.Error(err)
 		}
