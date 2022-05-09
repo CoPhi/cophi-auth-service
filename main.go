@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/CoPhi/cophi-auth-service/apikey"
-	"github.com/CoPhi/cophi-auth-service/auth"
 	openapi "github.com/CoPhi/cophi-auth-service/go"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 	"github.com/CoPhi/cophi-auth-service/user"
@@ -24,9 +23,6 @@ import (
 
 //go:embed templates/*
 var templates embed.FS
-
-//go:embed cophi-ui/*
-var dist embed.FS
 
 //go:embed RS256.key.pub
 var pubKey string // TODO: make env variable
@@ -80,7 +76,7 @@ func main() {
 	router.Handle("/saml/", sp)
 	router.Handle("/callback/saml", sp.RequireAccount(http.HandlerFunc(samlSPCallback(privKey, rts))))
 
-	router.PathPrefix("/").Handler(auth.MustAuth(http.FileServer(getFileSystem())))
+	// router.PathPrefix("/").Handler(auth.MustAuth(http.FileServer(getFileSystem())))
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:4200"}, // TODO: make this parametric on env
@@ -129,7 +125,7 @@ func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	t.templ.Execute(w, r)
 }
 
-func getFileSystem() http.FileSystem {
+func getFileSystem(dist embed.FS) http.FileSystem {
 	fsys, err := fs.Sub(dist, "cophi-ui")
 	if err != nil {
 		log.Fatal(err)
