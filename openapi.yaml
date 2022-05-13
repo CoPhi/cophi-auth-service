@@ -114,7 +114,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/token"
+                $ref: "#/components/schemas/token" #TODO remove json response, no need since it is already set in the cookies
         "400":
           description: Bad Request for example issuing a valid token to be refreshed
         "401":
