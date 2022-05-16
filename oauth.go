@@ -12,18 +12,14 @@ import (
 	"github.com/markbates/goth/providers/google"
 )
 
-func setupProviders() {
-	//TODO: remove secrets from code
-	clientid := "736892386107-pik68apgj7acgdigkutg25c075qat9nu.apps.googleusercontent.com"
-	secret := "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"
-	gothic.Store = sessions.NewCookieStore([]byte("<your secret here>")) // TODO
+func setupProviders(rootURL, googleClientID, googleSecret string) {
+	gothic.Store = sessions.NewCookieStore([]byte("<your secret here>")) // TODO: this is unused, it just avoid warning messages
 	goth.UseProviders(
-		// google.New(os.Getenv("GOOGLE_KEY"), os.Getenv("GOOGLE_SECRET"), "http://localhost:3000/callback/oauth/google"),
 		google.New(
-			clientid,
-			secret,
-			"http://localhost:8000/callback/oauth",
-			"email", // TODO: check
+			googleClientID,
+			googleSecret,
+			rootURL+"/callback/oauth",
+			"email", // TODO: check, maybe userinf.email is enough
 			"https://www.googleapis.com/auth/userinfo.email",
 			"https://www.googleapis.com/auth/userinfo.profile",
 		),
