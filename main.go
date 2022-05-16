@@ -74,6 +74,8 @@ func main() {
 	router.HandleFunc("/callback/oauth", oauthCallback(privKey, rts))
 
 	router.Handle("/saml/", sp)
+	router.Handle("/saml/acs", http.HandlerFunc(sp.ServeACS))
+	router.Handle("/saml/metadata", http.HandlerFunc(sp.ServeMetadata))
 	router.Handle("/callback/saml", sp.RequireAccount(http.HandlerFunc(samlSPCallback(privKey, rts))))
 
 	// router.PathPrefix("/").Handler(auth.MustAuth(http.FileServer(getFileSystem())))
