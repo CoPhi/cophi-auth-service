@@ -76,9 +76,8 @@ func main() {
 	router.Handle("/saml/", sp)
 	router.Handle("/saml/acs", http.HandlerFunc(sp.ServeACS))
 	router.Handle("/saml/metadata", http.HandlerFunc(sp.ServeMetadata))
-	router.Handle("/callback/saml", sp.RequireAccount(http.HandlerFunc(samlSPCallback(privKey, rts))))
 
-	// router.PathPrefix("/").Handler(auth.MustAuth(http.FileServer(getFileSystem())))
+	router.Handle("/login/saml", sp.RequireAccount(http.HandlerFunc(samlSPCallback(privKey, rts)))) // TODO: test and set return URL for saml authentication
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"http://localhost:4200"}, // TODO: make this parametric on env
