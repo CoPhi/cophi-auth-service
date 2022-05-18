@@ -21,6 +21,13 @@ func samlSPCallback(privKey string, rts refreshtoken.Store) func(w http.Response
 			LastName: samlsp.AttributeFromContext(r.Context(), "sn"),
 			Email:    samlsp.AttributeFromContext(r.Context(), "mail"),
 		}
+		http.SetCookie(w, &http.Cookie{
+			Name:     "token",
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+		})
 		auth.AuthCallback(rts, &user, privKey)(w, r)
 	}
 }
