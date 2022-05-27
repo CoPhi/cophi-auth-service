@@ -53,6 +53,7 @@ func getEnvOrDefault(envname, defaultVal string) string {
 }
 
 type conf struct {
+	domain                                string
 	adminApiKey                           string
 	rs256PrivKey, rs256PubKey             string
 	corsList                              []string //e.g. for the data service
@@ -79,6 +80,7 @@ func main() {
 	}
 
 	conf := conf{
+		domain:                 os.Getenv("DOMAIN"),
 		port:                   getEnvOrDefault("PORT", "8000"),
 		adminApiKey:            getEnvOrDefault("ADMIN_APIKEY", "admin"),
 		corsList:               strings.Split(getEnvOrDefault("CORS", "http://localhost:4200"), ","),
@@ -89,7 +91,7 @@ func main() {
 
 		idpURL:  getEnvOrDefault("IDP_URL", "https://samltest.id/saml/idp"),
 		rootURL: getEnvOrDefault("ROOT_URL", "http://localhost:8000"),
-		cert:    os.Getenv("CERT"), //getEnvOrDefault("CERT", cert),
+		cert:    getEnvOrDefault("CERT", cert),
 		cerKey:  getEnvOrDefault("CERT_KEY", certKey),
 
 		googleClientID: getEnvOrDefault("GOOGLE_CLIENT_ID", "736892386107-pik68apgj7acgdigkutg25c075qat9nu.apps.googleusercontent.com"), // TODO: remove this default
@@ -99,8 +101,8 @@ func main() {
 	rts := refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(5 * time.Hour))
 
 	DefaultApiService := openapi.NewDefaultApiService(
-		pubKey,
-		privKey,
+		conf.rs256PubKey,
+		conf.rs256PrivKey,
 		rts,
 	)
 	DefaultApiController := openapi.NewDefaultApiController(DefaultApiService)
@@ -132,12 +134,12 @@ func main() {
 
 	// path must have provider as query parameter e.g. /login/oauth?provider=google
 	router.HandleFunc("/login/oauth", setReturnURL(gothic.BeginAuthHandler))
-	router.HandleFunc("/callback/oauth", oauthCallback(privKey, rts))
+	router.HandleFunc("/callback/oauth", oauthCallback(conf.rs256PrivKey, conf.domain, rts))
 
 	router.Handle("/saml/", sp)
 	router.Handle("/saml/acs", http.HandlerFunc(sp.ServeACS))
 	router.Handle("/saml/metadata", http.HandlerFunc(sp.ServeMetadata))
-	router.HandleFunc("/login/saml", setReturnURL(sp.RequireAccount(http.HandlerFunc(samlSPCallback(privKey, rts))).ServeHTTP))
+	router.HandleFunc("/login/saml", setReturnURL(sp.RequireAccount(http.HandlerFunc(samlSPCallback(conf.rs256PrivKey, conf.domain, rts))).ServeHTTP))
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   conf.corsList,

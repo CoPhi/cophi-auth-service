@@ -16,7 +16,7 @@ type AuthUser struct {
 }
 type authHandler struct{ next http.Handler }
 
-func AuthCallback(rts refreshtoken.Store, u *AuthUser, privKey string) func(w http.ResponseWriter, r *http.Request) {
+func AuthCallback(rts refreshtoken.Store, u *AuthUser, privKey string, domain string) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		jwtToken, err := jwt.GenerateToken(u.Name, u.LastName, u.Email, 1*time.Minute, privKey) // TODO: expiration time an env variable
@@ -25,9 +25,10 @@ func AuthCallback(rts refreshtoken.Store, u *AuthUser, privKey string) func(w ht
 			return
 		}
 		http.SetCookie(w, &http.Cookie{
-			Name:  "access_token",
-			Value: jwtToken,
-			Path:  "/",
+			Name:   "access_token",
+			Value:  jwtToken,
+			Path:   "/",
+			Domain: domain,
 			// Secure: true,
 		})
 		rt := refreshtoken.New()
@@ -36,6 +37,7 @@ func AuthCallback(rts refreshtoken.Store, u *AuthUser, privKey string) func(w ht
 			Name:     "refresh_token",
 			Value:    rt,
 			Path:     "/",
+			Domain:   domain,
 			HttpOnly: true,
 			// Secure:   true,
 		})

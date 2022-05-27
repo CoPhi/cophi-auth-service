@@ -26,7 +26,7 @@ func setupProviders(rootURL, googleClientID, googleSecret string) {
 	)
 }
 
-func oauthCallback(privKey string, rts refreshtoken.Store) func(w http.ResponseWriter, r *http.Request) {
+func oauthCallback(privKey, domain string, rts refreshtoken.Store) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		oauthUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
@@ -38,6 +38,6 @@ func oauthCallback(privKey string, rts refreshtoken.Store) func(w http.ResponseW
 			Name:     oauthUser.FirstName,
 			LastName: oauthUser.LastName,
 		}
-		auth.AuthCallback(rts, &user, privKey)(w, r)
+		auth.AuthCallback(rts, &user, privKey, domain)(w, r)
 	}
 }
