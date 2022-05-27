@@ -84,13 +84,13 @@ func main() {
 		corsList:               strings.Split(getEnvOrDefault("CORS", "http://localhost:4200"), ","),
 		jwtExpiration:          jwtExpiration,
 		refreshTokenExpiration: rtExpiration,
-		rs256PrivKey:           privKey,
-		rs256PubKey:            pubKey,
+		rs256PrivKey:           getEnvOrDefault("RS256_PRIV", privKey),
+		rs256PubKey:            getEnvOrDefault("RS256_PUB", pubKey),
 
 		idpURL:  getEnvOrDefault("IDP_URL", "https://samltest.id/saml/idp"),
 		rootURL: getEnvOrDefault("ROOT_URL", "http://localhost:8000"),
-		cert:    cert,
-		cerKey:  certKey,
+		cert:    os.Getenv("CERT"), //getEnvOrDefault("CERT", cert),
+		cerKey:  getEnvOrDefault("CERT_KEY", certKey),
 
 		googleClientID: getEnvOrDefault("GOOGLE_CLIENT_ID", "736892386107-pik68apgj7acgdigkutg25c075qat9nu.apps.googleusercontent.com"), // TODO: remove this default
 		googleSecret:   getEnvOrDefault("GOOGLE_SECRET", "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"),                                         // TODO: remove this default
