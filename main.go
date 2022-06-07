@@ -98,6 +98,8 @@ func main() {
 		googleSecret:   getEnvOrDefault("GOOGLE_SECRET", "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"),                                         // TODO: remove this default
 	}
 
+	log.Println("conf:", conf)
+
 	rts := refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(5 * time.Hour))
 
 	DefaultApiService := openapi.NewDefaultApiService(
@@ -154,7 +156,6 @@ func main() {
 // TODO: check if a cookie for the host should be set explicitly in case of sharing cookies between x.domain.com, domain.com, y.domain.com
 func setReturnURL(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("url:", r.URL.Query().Get("url"))
 		http.SetCookie(w, &http.Cookie{
 			Name:     "referer",
 			Value:    r.URL.Query().Get("url"),
