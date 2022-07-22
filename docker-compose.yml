@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+  auth:
+    container_name: 'cophi-auth-compose'
+    image: szenzaro/cophi-auth:demo-20220601-aiucd
+    build: .
+    environment:
+      CERT: ""
+      CERT_KEY: ""
+      RS256_PRIV: ""
+      RS256_PUB: ""
+      PORT: 8000
+      ADMIN_APIKEY: admin
+      CORS: "https://6002.greekschools.eu"
+      REFRESH_TOKEN_EXPIRATION: "1460 h"
+      JWT_EXPIRATION: "5 m"
+      ROOT_URL: "https://6003.greekschools.eu"
+      GOOGLE_CLIENT_ID: ""
+      GOOGLE_SECRET: ""
+      IDP_URL: "https://samltest.id/saml/idp"
+      DOMAIN: .greekschools.eu
+    ports:
+      - "6003:8000"
+  # ui:
+  #   container_name: 'cophi-ui-stack'
+  #   image: szenzaro/cophi-ui:demo-20220601-aiucd
+  #   build: .
+  #   ports:
+  #     - "6002:3001"
+   

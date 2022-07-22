@@ -1,0 +1,3 @@
+[submodule "cophi-editor-fe"]
+	path = cophi-editor-fe
+	url = git@github.com:CoPhi/cophi-editor-fe.git

@@ -1,0 +1,317 @@
+openapi: 3.0.1
+info:
+  title: GreekSchools Data Service API
+  version: 0.0.1
+servers:
+- url: https://auth.greekschools.eu:{port}/api/{basePath}
+  variables:
+    basePath:
+      default: v1
+    port:
+      default: "1234"
+paths:
+  /users:
+    description: this API is accessible only through admin apikey, it is meant to
+      be a diagnostic API
+    get:
+      parameters:
+      - explode: false
+        in: header
+        name: api-key
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/user'
+                type: array
+          description: OK
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - users
+    post:
+      parameters:
+      - explode: false
+        in: header
+        name: api-key
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user'
+      responses:
+        "201":
+          description: OK
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      parameters:
+      - explode: false
+        in: header
+        name: api-key
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - users
+    description: this API is accessible only through admin apikey, it is meant to
+      be a diagnostic API
+    get:
+      parameters:
+      - explode: false
+        in: header
+        name: api-key
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+          description: Ok
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - users
+  /jwt/refresh:
+    description: Refresh an access token by presenting a valid refresh token
+    post:
+      parameters:
+      - explode: true
+        in: cookie
+        name: refresh_token
+        required: true
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: cookie
+        name: access_token
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/token'
+          description: Ok
+        "400":
+          description: Bad Request for example issuing a valid token to be refreshed
+        "401":
+          description: Unauthorized when both access and refresh tokens expired and
+            they belong to the same owner
+        "403":
+          description: Forbidden when access and refresh tokens belong to different
+            users
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+          description: Internal Server Error
+      security:
+      - jwtAuth: []
+  /jwt/public-keys:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/publicKey'
+          description: Returns the public RSA key to validate JWTs
+  /status:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/status'
+          description: OK
+  /applications:
+    get:
+      parameters:
+      - explode: false
+        in: header
+        name: api-key
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+          description: OK
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+  /applications/{id}:
+    delete:
+      parameters:
+      - explode: false
+        in: header
+        name: api-key
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          example: aRxGGEpVawiUak6He367W3oeOfh73irw+1G1h1jc
+          type: string
+        style: simple
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+components:
+  parameters:
+    apiKey:
+      explode: false
+      in: header
+      name: api-key
+      required: true
+      schema:
+        type: string
+      style: simple
+  schemas:
+    token:
+      example:
+        token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+        refresh_token: E0czpESaoeGxQdaanF7cFYzfo-AnsnKaqhjlHpzcROcRD91j7rgVBw
+      properties:
+        token:
+          format: JWT
+          type: string
+        refresh_token:
+          type: string
+    publicKey:
+      example:
+        publicKey: |
+          -----BEGIN PUBLIC KEY----- MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA6Hctf8HaKduMvhFgFnbj jWGK0N74rbp4RmsEuBVzlpCLi55wJvFd2S80SDrsq1Z1IW7JGr+bDjQ+dvIld/u3 VPsBRtDcnh6X1WnjMwH4oeGIUc7tLZjpEEHvScs73KHIfhMs9u2XUAl5ATi6k+om v3GJzDooqWiip/pZEI1BK+ebd5pc7VRg3jkyelIbQTcCSPX0i6Xj29C1AyUWbgY5 PTmrqXRgQBcz1vUFrr40zXRP1VoZvV5HCkfWmLqLIr7Q3ciWUq6hS2LnmDjMZE7v HyVMlUMiOs4ac4cGy7LlkfhK8OCovniKC6kVD6jUtZKNzwPxcivGl9Na2ucQZ3qn lWBcUTotPrR+zLoRi7LcV58JJC81oy8i4SitCI0RUpSux9PszqhDZxtT+dyGFmd/ SYK5ujFd33Qe8skcYNM40hRZtG+KyoGsBPUZZ3bKyTz5pvYuuPu2tm0VhdbzvXTU hJV7jkMi5ip01VgUPr7EsicJ8yoHWHwqNjg7N3+gfwdV8d9WfhaTABulmVBk+lX3 Qvb64jWSUR46yMqiJMrguPY4Uc2O/E5qRzXkdm1d+8FeNaIsZei/PvoVD5Aav7rM YEc2m3+KTzEoRG/2RiZfHz8mGxzOLMZgEuWYHdF0SubYLx9eGVav9TQvPXvzxvhp NFxpV6c7Yvi8RFwzsn7Lpn8CAwEAAQ== -----END PUBLIC KEY-----
+      properties:
+        publicKey:
+          type: string
+      required:
+      - publicKey
+    error:
+      properties:
+        timestamp:
+          format: date-time
+          type: string
+        message:
+          example: Internal Server Error
+          type: string
+        path:
+          example: /api/v1/units/
+          type: string
+      type: object
+    status:
+      example:
+        version: version
+        status: running
+      properties:
+        status:
+          enum:
+          - running
+          type: string
+        version:
+          type: string
+      required:
+      - status
+      - version
+      type: object
+    user:
+      example:
+        name: name
+        email: email
+        lastname: lastname
+      properties:
+        name:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+      type: object
+  securitySchemes:
+    jwtAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+    apiKeyAuth:
+      in: header
+      name: X-API-KEY
+      type: apiKey

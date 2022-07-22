@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            display: flex;
+            background: #161b22;
+            justify-content: center;
+            align-items: center;
+            font-family: Calibri, sans-serif;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 30px;
+            color: #f6f6f6;
+            font-weight: 300;
+        }
+
+        .login-box {
+            width: 300px;
+            margin-top: 10%;
+            border: solid 1px transparent;
+            display: flex;
+            flex-direction: column;
+            align-content: center;
+            background-color: #21262b;
+            border-radius: 6px;
+        }
+
+        .provider {
+            background-color: #f6f6f6;
+            color: #21262b;
+            border-radius: 24px;
+            height: 48px;
+            margin: 10px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-box">
+        <h1>Login</h1>
+        <a class="provider" href="/login/oauth?provider=google">with Google</a>
+        <a class="provider" href="/login/saml">with Saml</a>
+    </div>
+</body>
+
+</html>
