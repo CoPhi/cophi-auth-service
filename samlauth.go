@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/CoPhi/cophi-auth-service/auth"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
@@ -14,7 +15,7 @@ import (
 	"github.com/crewjam/saml/samlsp"
 )
 
-func samlSPCallback(privKey, domain string, rts refreshtoken.Store) func(w http.ResponseWriter, r *http.Request) {
+func samlSPCallback(privKey, domain string, rts refreshtoken.Store, jwtExpiration time.Duration) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := auth.AuthUser{
 			Name:     samlsp.AttributeFromContext(r.Context(), "givenName"),
@@ -28,7 +29,7 @@ func samlSPCallback(privKey, domain string, rts refreshtoken.Store) func(w http.
 			MaxAge:   -1,
 			HttpOnly: true,
 		})
-		auth.AuthCallback(rts, &user, privKey, domain)(w, r)
+		auth.AuthCallback(rts, &user, privKey, domain, jwtExpiration)(w, r)
 	}
 }
 

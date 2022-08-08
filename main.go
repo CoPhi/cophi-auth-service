@@ -74,7 +74,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	jwtExpiration, err := parsePeriod(getEnvOrDefault("JWT_EXPIRATION", "5 m"))
+	jwtExpiration, err := parsePeriod(getEnvOrDefault("JWT_EXPIRATION", "1 h"))
 	if err != nil {
 		panic(err)
 	}
@@ -136,12 +136,12 @@ func main() {
 
 	// path must have provider as query parameter e.g. /login/oauth?provider=google
 	router.HandleFunc("/login/oauth", setReturnURL(gothic.BeginAuthHandler))
-	router.HandleFunc("/callback/oauth", oauthCallback(conf.rs256PrivKey, conf.domain, rts))
+	router.HandleFunc("/callback/oauth", oauthCallback(conf.rs256PrivKey, conf.domain, rts, conf.jwtExpiration))
 
 	router.Handle("/saml/", sp)
 	router.Handle("/saml/acs", http.HandlerFunc(sp.ServeACS))
 	router.Handle("/saml/metadata", http.HandlerFunc(sp.ServeMetadata))
-	router.HandleFunc("/login/saml", setReturnURL(sp.RequireAccount(http.HandlerFunc(samlSPCallback(conf.rs256PrivKey, conf.domain, rts))).ServeHTTP))
+	router.HandleFunc("/login/saml", setReturnURL(sp.RequireAccount(http.HandlerFunc(samlSPCallback(conf.rs256PrivKey, conf.domain, rts, conf.jwtExpiration))).ServeHTTP))
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   conf.corsList,

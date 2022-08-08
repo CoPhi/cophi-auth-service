@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/CoPhi/cophi-auth-service/auth"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
@@ -26,7 +27,7 @@ func setupProviders(rootURL, googleClientID, googleSecret string) {
 	)
 }
 
-func oauthCallback(privKey, domain string, rts refreshtoken.Store) func(w http.ResponseWriter, r *http.Request) {
+func oauthCallback(privKey, domain string, rts refreshtoken.Store, jwtExpiration time.Duration) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		oauthUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
@@ -38,6 +39,6 @@ func oauthCallback(privKey, domain string, rts refreshtoken.Store) func(w http.R
 			Name:     oauthUser.FirstName,
 			LastName: oauthUser.LastName,
 		}
-		auth.AuthCallback(rts, &user, privKey, domain)(w, r)
+		auth.AuthCallback(rts, &user, privKey, domain, jwtExpiration)(w, r)
 	}
 }
