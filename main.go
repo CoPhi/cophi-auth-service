@@ -29,6 +29,8 @@ var (
 	ErrUnrecognizedUnit   = errors.New("unrecognized time unit")
 )
 
+const VERSION = "0.0.3"
+
 //go:embed templates/*
 var templates embed.FS
 
@@ -68,7 +70,7 @@ type conf struct {
 }
 
 func main() {
-	log.Printf("Server started")
+	log.Println("CophiAUTH " + VERSION)
 
 	rtExpiration, err := parsePeriod(getEnvOrDefault("REFRESH_TOKEN_EXPIRATION", "1460 h")) // 2 months
 	if err != nil {
@@ -97,8 +99,6 @@ func main() {
 		googleClientID: getEnvOrDefault("GOOGLE_CLIENT_ID", "736892386107-pik68apgj7acgdigkutg25c075qat9nu.apps.googleusercontent.com"), // TODO: remove this default
 		googleSecret:   getEnvOrDefault("GOOGLE_SECRET", "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"),                                         // TODO: remove this default
 	}
-
-	log.Println("conf:", conf)
 
 	rts := refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(5 * time.Hour))
 
