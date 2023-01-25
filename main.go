@@ -24,9 +24,9 @@ import (
 )
 
 var (
-	MalformedParameter = errors.New("malformed error parameter")
-	ParseIntError      = errors.New("unable to parse int")
-	UnrecognizedUnit   = errors.New("unrecognized time unit")
+	ErrMalformedParameter = errors.New("malformed error parameter")
+	ErrParseIntError      = errors.New("unable to parse int")
+	ErrUnrecognizedUnit   = errors.New("unrecognized time unit")
 )
 
 //go:embed templates/*
@@ -188,12 +188,12 @@ func hash(s string) string {
 func parsePeriod(duration string) (time.Duration, error) {
 	d := strings.Split(duration, " ")
 	if len(d) != 2 {
-		return time.Second, MalformedParameter
+		return time.Second, ErrMalformedParameter
 	}
 
 	n, err := strconv.Atoi(d[0])
 	if err != nil {
-		return time.Second, ParseIntError
+		return time.Second, ErrParseIntError
 	}
 	switch d[1] {
 	case "s":
@@ -203,6 +203,6 @@ func parsePeriod(duration string) (time.Duration, error) {
 	case "h":
 		return time.Duration(n) * time.Hour, nil
 	default:
-		return time.Second, UnrecognizedUnit
+		return time.Second, ErrUnrecognizedUnit
 	}
 }
