@@ -50,6 +50,10 @@ func NewSP(cert, certKey, idpURL, rootURL string, ctx context.Context, httpClien
 	m.fetchMetadata(ctx, httpClient, *m.idpMetadataURL)
 	m.parseRootURL(rootURL)
 
+	if m.err != nil {
+		return nil, m.err
+	}
+
 	m.samlSP, m.err = samlsp.New(samlsp.Options{
 		URL:         *m.rootURL,
 		Key:         m.certificate.PrivateKey.(*rsa.PrivateKey),

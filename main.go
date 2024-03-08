@@ -20,6 +20,7 @@ import (
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 	"github.com/CoPhi/cophi-auth-service/user"
 	"github.com/go-chi/cors"
+	"github.com/gorilla/mux"
 	"github.com/markbates/goth/gothic"
 )
 
@@ -29,21 +30,29 @@ var (
 	ErrUnrecognizedUnit   = errors.New("unrecognized time unit")
 )
 
-const VERSION = "0.0.3"
+const VERSION = "0.0.4"
 
 //go:embed templates/*
 var templates embed.FS
 
-//go:embed RS256.key.pub
+// RS256.key.pub
+//
+//go:embed jwtRS256.key.pub
 var pubKey string
 
-//go:embed RS256.key
+// RS256.key
+//
+//go:embed jwtRS256.key
 var privKey string
 
-//go:embed gsservice.cert
+// gsservice.cert
+//
+//go:embed gs-saml.cert
 var cert string
 
-//go:embed gsservice.key
+// gsservice.key
+//
+//go:embed gs-saml.key
 var certKey string
 
 func getEnvOrDefault(envname, defaultVal string) string {
@@ -117,18 +126,6 @@ func main() {
 
 	router := openapi.NewRouter(DefaultApiController, UsersApiController)
 
-	sp, err := NewSP(
-		conf.cert,
-		conf.cerKey,
-		conf.idpURL,
-		conf.rootURL,
-		context.Background(),
-		http.DefaultClient,
-	)
-	if err != nil {
-		panic(err) // TODO handle error
-	}
-
 	setupProviders(conf.rootURL, conf.googleClientID, conf.googleSecret)
 
 	//router.Handle("/", mustAuth(http.FileServer(getFileSystem())))
@@ -138,10 +135,7 @@ func main() {
 	router.HandleFunc("/login/oauth", setReturnURL(gothic.BeginAuthHandler))
 	router.HandleFunc("/callback/oauth", oauthCallback(conf.rs256PrivKey, conf.domain, rts, conf.jwtExpiration))
 
-	router.Handle("/saml/", sp)
-	router.Handle("/saml/acs", http.HandlerFunc(sp.ServeACS))
-	router.Handle("/saml/metadata", http.HandlerFunc(sp.ServeMetadata))
-	router.HandleFunc("/login/saml", setReturnURL(sp.RequireAccount(http.HandlerFunc(samlSPCallback(conf.rs256PrivKey, conf.domain, rts, conf.jwtExpiration))).ServeHTTP))
+	handleSaml(router, &conf, rts)
 
 	c := cors.New(cors.Options{
 		AllowedOrigins:   conf.corsList,
@@ -151,6 +145,24 @@ func main() {
 	// start the web server
 	log.Println("Start listening")
 	log.Fatal(http.ListenAndServe(":"+conf.port, c.Handler(router)))
+}
+
+func handleSaml(router *mux.Router, c *conf, rts refreshtoken.Store) {
+	sp, err := NewSP(
+		c.cert,
+		c.cerKey,
+		c.idpURL,
+		c.rootURL,
+		context.Background(),
+		http.DefaultClient,
+	)
+
+	if err == nil {
+		router.Handle("/saml/", sp)
+		router.Handle("/saml/acs", http.HandlerFunc(sp.ServeACS))
+		router.Handle("/saml/metadata", http.HandlerFunc(sp.ServeMetadata))
+		router.HandleFunc("/login/saml", setReturnURL(sp.RequireAccount(http.HandlerFunc(samlSPCallback(c.rs256PrivKey, c.domain, rts, c.jwtExpiration))).ServeHTTP))
+	}
 }
 
 // TODO: check if a cookie for the host should be set explicitly in case of sharing cookies between x.domain.com, domain.com, y.domain.com
