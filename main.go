@@ -21,6 +21,7 @@ import (
 	"github.com/CoPhi/cophi-auth-service/user"
 	"github.com/go-chi/cors"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/markbates/goth/gothic"
 )
 
@@ -30,38 +31,10 @@ var (
 	ErrUnrecognizedUnit   = errors.New("unrecognized time unit")
 )
 
-const VERSION = "0.0.6"
+const VERSION = "0.0.7"
 
 //go:embed templates/*
 var templates embed.FS
-
-// RS256.key.pub
-//
-//go:embed jwtRS256.key.pub
-var pubKey string
-
-// RS256.key
-//
-//go:embed jwtRS256.key
-var privKey string
-
-// gsservice.cert
-//
-//go:embed gs-saml.cert
-var cert string
-
-// gsservice.key
-//
-//go:embed gs-saml.key
-var certKey string
-
-func getEnvOrDefault(envname, defaultVal string) string {
-	e := os.Getenv(envname)
-	if e == "" {
-		e = defaultVal
-	}
-	return e
-}
 
 type conf struct {
 	domain                                string
@@ -81,32 +54,41 @@ type conf struct {
 func main() {
 	log.Println("CophiAUTH " + VERSION)
 
-	rtExpiration, err := parsePeriod(getEnvOrDefault("REFRESH_TOKEN_EXPIRATION", "1460 h")) // 2 months
+	prodMode := os.Getenv("PROD")
+	if prodMode == "" {
+		log.Println("Loading local env from file")
+		err := godotenv.Load("local.env")
+		if err != nil {
+			log.Fatalf("Some error occured. Err: %s", err)
+		}
+	}
+
+	rtExpiration, err := parsePeriod(os.Getenv("REFRESH_TOKEN_EXPIRATION"))
 	if err != nil {
 		panic(err)
 	}
-	jwtExpiration, err := parsePeriod(getEnvOrDefault("JWT_EXPIRATION", "1 h"))
+	jwtExpiration, err := parsePeriod(os.Getenv("JWT_EXPIRATION"))
 	if err != nil {
 		panic(err)
 	}
 
 	conf := conf{
 		domain:                 os.Getenv("DOMAIN"),
-		port:                   getEnvOrDefault("PORT", "8000"),
-		adminApiKey:            getEnvOrDefault("ADMIN_APIKEY", "admin"),
-		corsList:               strings.Split(getEnvOrDefault("CORS", "http://localhost:4200"), ","),
+		port:                   os.Getenv("PORT"),
+		adminApiKey:            os.Getenv("ADMIN_APIKEY"),
+		corsList:               strings.Split(os.Getenv("CORS"), ","),
 		jwtExpiration:          jwtExpiration,
 		refreshTokenExpiration: rtExpiration,
-		rs256PrivKey:           getEnvOrDefault("RS256_PRIV", privKey),
-		rs256PubKey:            getEnvOrDefault("RS256_PUB", pubKey),
+		rs256PrivKey:           os.Getenv("RS256_PRIV"),
+		rs256PubKey:            os.Getenv("RS256_PUB"),
 
-		idpURL:  getEnvOrDefault("IDP_URL", "https://samltest.id/saml/idp"),
-		rootURL: getEnvOrDefault("ROOT_URL", "http://localhost:8000"),
-		cert:    getEnvOrDefault("CERT", cert),
-		cerKey:  getEnvOrDefault("CERT_KEY", certKey),
+		idpURL:  os.Getenv("IDP_URL"),
+		rootURL: os.Getenv("ROOT_URL"),
+		cert:    os.Getenv("CERT"),
+		cerKey:  os.Getenv("CERT_KEY"),
 
-		googleClientID: getEnvOrDefault("GOOGLE_CLIENT_ID", "736892386107-pik68apgj7acgdigkutg25c075qat9nu.apps.googleusercontent.com"), // TODO: remove this default
-		googleSecret:   getEnvOrDefault("GOOGLE_SECRET", "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"),                                         // TODO: remove this default
+		googleClientID: os.Getenv("GOOGLE_CLIENT_ID"),
+		googleSecret:   os.Getenv("GOOGLE_SECRET"),
 	}
 
 	rts := refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(5 * time.Hour))
