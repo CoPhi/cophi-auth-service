@@ -30,7 +30,7 @@ var (
 	ErrUnrecognizedUnit   = errors.New("unrecognized time unit")
 )
 
-const VERSION = "0.0.4"
+const VERSION = "0.0.6"
 
 //go:embed templates/*
 var templates embed.FS
