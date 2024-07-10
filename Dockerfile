@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # escape=`
 
-FROM golang:1.18-alpine
+FROM golang:1.22-alpine
 WORKDIR /app
 COPY go.mod ./
 COPY go.sum ./
