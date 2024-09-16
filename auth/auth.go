@@ -16,7 +16,7 @@ type AuthUser struct {
 }
 type authHandler struct{ next http.Handler }
 
-func AuthCallback(rts refreshtoken.Store, u *AuthUser, privKey string, domain string, jwtExpiration time.Duration) func(w http.ResponseWriter, r *http.Request) {
+func AuthCallback(returnURL string, rts refreshtoken.Store, u *AuthUser, privKey string, domain string, jwtExpiration time.Duration) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		jwtToken, err := jwt.GenerateToken(u.Name, u.LastName, u.Email, jwtExpiration, privKey)
@@ -42,10 +42,9 @@ func AuthCallback(rts refreshtoken.Store, u *AuthUser, privKey string, domain st
 			// Secure:   true,
 		})
 
-		referer, err := r.Cookie("referer")
 		location := "/login"
-		if err == nil && referer.Value != "" {
-			location = referer.Value
+		if returnURL != "" {
+			location = returnURL
 		}
 		http.SetCookie(w, &http.Cookie{
 			Name:     "referer",

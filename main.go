@@ -15,7 +15,9 @@ import (
 	"sync"
 	"time"
 
+	firebase "firebase.google.com/go"
 	"github.com/CoPhi/cophi-auth-service/apikey"
+	"github.com/CoPhi/cophi-auth-service/auth"
 	openapi "github.com/CoPhi/cophi-auth-service/go"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 	"github.com/CoPhi/cophi-auth-service/user"
@@ -31,7 +33,7 @@ var (
 	ErrUnrecognizedUnit   = errors.New("unrecognized time unit")
 )
 
-const VERSION = "0.0.7"
+const VERSION = "0.0.8"
 
 //go:embed templates/*
 var templates embed.FS
@@ -62,6 +64,8 @@ func main() {
 			log.Fatalf("Some error occured. Err: %s", err)
 		}
 	}
+
+	createFirebaseConfFile("firebase-conf.json", os.Getenv("FIREBASE_CONF"))
 
 	rtExpiration, err := parsePeriod(os.Getenv("REFRESH_TOKEN_EXPIRATION"))
 	if err != nil {
@@ -119,14 +123,71 @@ func main() {
 
 	handleSaml(router, &conf, rts)
 
+	ctx := context.Background()
+
+	app, err := firebase.NewApp(ctx, nil)
+	if err != nil {
+		log.Fatalf("error initializing app: %v\n", err)
+	}
+	router.HandleFunc("/login/firebase", handleFirebase(app, ctx, conf.rs256PrivKey, conf.domain, rts, conf.jwtExpiration))
+
 	c := cors.New(cors.Options{
 		AllowedOrigins:   conf.corsList,
 		AllowCredentials: true,
 	})
-
 	// start the web server
 	log.Println("Start listening")
 	log.Fatal(http.ListenAndServe(":"+conf.port, c.Handler(router)))
+}
+
+func createFirebaseConfFile(path, content string) {
+	err := os.WriteFile(path, []byte(content), 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func handleFirebase(app *firebase.App, ctx context.Context, privKey, domain string, rts refreshtoken.Store, jwtExpiration time.Duration) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		client, err := app.Auth(ctx)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		idToken := r.URL.Query().Get("token")
+		email := r.URL.Query().Get("email")
+		name := r.URL.Query().Get("name")
+		lastname := r.URL.Query().Get("lastname")
+
+		if idToken == "" || email == "" || name == "" || lastname == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		token, err := client.VerifyIDToken(ctx, idToken)
+		if err != nil {
+			fmt.Println("Error verifying token " + idToken)
+			w.WriteHeader(http.StatusForbidden)
+			return
+		}
+
+		log.Printf("Verified ID token: %v\n", token)
+
+		user := auth.AuthUser{
+			Name:     name,
+			LastName: lastname,
+			Email:    email,
+		}
+		http.SetCookie(w, &http.Cookie{
+			Name:     "token",
+			Value:    "",
+			Path:     "/",
+			MaxAge:   -1,
+			HttpOnly: true,
+		})
+		returnURL := r.URL.Query().Get("url")
+		auth.AuthCallback(returnURL, rts, &user, privKey, domain, jwtExpiration)(w, r)
+	}
 }
 
 func handleSaml(router *mux.Router, c *conf, rts refreshtoken.Store) {

@@ -39,6 +39,11 @@ func oauthCallback(privKey, domain string, rts refreshtoken.Store, jwtExpiration
 			Name:     oauthUser.FirstName,
 			LastName: oauthUser.LastName,
 		}
-		auth.AuthCallback(rts, &user, privKey, domain, jwtExpiration)(w, r)
+		referer, err := r.Cookie("referer")
+		if err != nil {
+			fmt.Fprintln(w, err)
+			return
+		}
+		auth.AuthCallback(referer.Value, rts, &user, privKey, domain, jwtExpiration)(w, r)
 	}
 }

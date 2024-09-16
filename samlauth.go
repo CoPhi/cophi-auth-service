@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"net/http"
 	"net/url"
 	"time"
@@ -29,7 +30,12 @@ func samlSPCallback(privKey, domain string, rts refreshtoken.Store, jwtExpiratio
 			MaxAge:   -1,
 			HttpOnly: true,
 		})
-		auth.AuthCallback(rts, &user, privKey, domain, jwtExpiration)(w, r)
+		referer, err := r.Cookie("referer")
+		if err != nil {
+			fmt.Fprintln(w, err)
+			return
+		}
+		auth.AuthCallback(referer.Value, rts, &user, privKey, domain, jwtExpiration)(w, r)
 	}
 }
 
