@@ -33,7 +33,7 @@ var (
 	ErrUnrecognizedUnit   = errors.New("unrecognized time unit")
 )
 
-const VERSION = "0.0.8"
+const VERSION = "0.0.9"
 
 //go:embed templates/*
 var templates embed.FS
@@ -151,6 +151,7 @@ func handleFirebase(app *firebase.App, ctx context.Context, privKey, domain stri
 	return func(w http.ResponseWriter, r *http.Request) {
 		client, err := app.Auth(ctx)
 		if err != nil {
+			fmt.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -160,6 +161,7 @@ func handleFirebase(app *firebase.App, ctx context.Context, privKey, domain stri
 		lastname := r.URL.Query().Get("lastname")
 
 		if idToken == "" || email == "" || name == "" || lastname == "" {
+			fmt.Printf("Empty user data: name-> %s, lastname-> %s, email-> %s, idToken-> %s", name, lastname, email, idToken)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}

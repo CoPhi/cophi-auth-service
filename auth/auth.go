@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"math/rand"
 	"net/http"
 	"time"
@@ -21,6 +22,8 @@ func AuthCallback(returnURL string, rts refreshtoken.Store, u *AuthUser, privKey
 
 		jwtToken, err := jwt.GenerateToken(u.Name, u.LastName, u.Email, jwtExpiration, privKey)
 		if err != nil {
+			fmt.Println("Error generating JWT Token")
+			fmt.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
