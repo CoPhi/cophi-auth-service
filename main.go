@@ -33,7 +33,7 @@ var (
 	ErrUnrecognizedUnit   = errors.New("unrecognized time unit")
 )
 
-const VERSION = "0.0.11"
+const VERSION = "0.0.12"
 
 //go:embed templates/*
 var templates embed.FS
@@ -83,17 +83,30 @@ func main() {
 		corsList:               strings.Split(os.Getenv("CORS"), ","),
 		jwtExpiration:          jwtExpiration,
 		refreshTokenExpiration: rtExpiration,
-		rs256PrivKey:           os.Getenv("RS256_PRIV"),
-		rs256PubKey:            os.Getenv("RS256_PUB"),
+		rs256PrivKey:           "",
+		rs256PubKey:            "",
 
 		idpURL:  os.Getenv("IDP_URL"),
 		rootURL: os.Getenv("ROOT_URL"),
-		cert:    os.Getenv("CERT"),
-		cerKey:  os.Getenv("CERT_KEY"),
+		cert:    "",
+		cerKey:  "",
 
 		googleClientID: os.Getenv("GOOGLE_CLIENT_ID"),
 		googleSecret:   os.Getenv("GOOGLE_SECRET"),
 	}
+
+	keyDir := os.Getenv("AUTH_KEYS_DIR")
+	if keyDir == "" {
+		keyDir = "/var/lib/cophi-auth"
+	}
+	keys, err := loadOrCreateKeyMaterial(keyDir)
+	if err != nil {
+		log.Fatalf("Unable to load auth keys from %s: %v", keyDir, err)
+	}
+	conf.rs256PrivKey = keys.jwtPrivate
+	conf.rs256PubKey = keys.jwtPublic
+	conf.cert = keys.samlCertificate
+	conf.cerKey = keys.samlPrivate
 
 	rts := refreshtoken.NewInMemoryTokenStore(refreshtoken.WithExpTime(5 * time.Hour))
 

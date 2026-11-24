@@ -5,3 +5,4 @@ openapi-generator-cli-*.jar
 local.env
 firebase-conf.json
 greekschools-firebase.json
+auth-keys/

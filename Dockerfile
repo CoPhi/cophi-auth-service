@@ -10,8 +10,13 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /auth-service .
 
 FROM alpine:3.23
 RUN apk --no-cache add ca-certificates
+RUN addgroup -S auth && adduser -S -G auth auth \
+    && mkdir -p /var/lib/cophi-auth \
+    && chown auth:auth /var/lib/cophi-auth \
+    && chmod 0700 /var/lib/cophi-auth
 WORKDIR /app
 COPY --from=builder /auth-service /auth-service
+RUN chown auth:auth /app
 
 ENV PROD=true
 ENV GSUI_PORT=3000
@@ -26,9 +31,6 @@ ENV GOOGLE_CLIENT_ID=
 ENV GOOGLE_SECRET=
 
 ENV IDP_URL="https://samltest.id/saml/idp"
-ENV CERT=
-ENV CERT_KEY=
-ENV RS256_PRIV=
-ENV RS256_PUB=
 ENV DOMAIN=".greekschools.eu"
+USER auth
 CMD ["/auth-service"]
