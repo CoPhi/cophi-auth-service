@@ -1,15 +1,19 @@
 # syntax=docker/dockerfile:1
-# escape=`
 
-FROM golang:1.22-alpine
-WORKDIR /app
-COPY go.mod ./
-COPY go.sum ./
+FROM golang:1.27-alpine AS builder
+WORKDIR /src
+COPY go.mod go.sum ./
 
 RUN go mod download
 COPY . .
-RUN go build -o /auth-service
+RUN CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /auth-service .
 
+FROM alpine:3.23
+RUN apk --no-cache add ca-certificates
+WORKDIR /app
+COPY --from=builder /auth-service /auth-service
+
+ENV PROD=true
 ENV GSUI_PORT=3000
 
 ENV PORT=8000

@@ -1,0 +1,7 @@
+.git
+.github
+.openapi-generator
+openapi-generator-cli-*.jar
+local.env
+firebase-conf.json
+greekschools-firebase.json
