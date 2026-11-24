@@ -97,7 +97,11 @@ func main() {
 
 	keyDir := os.Getenv("AUTH_KEYS_DIR")
 	if keyDir == "" {
-		keyDir = "/var/lib/cophi-auth"
+		if prodMode == "" {
+			keyDir = "./auth-keys"
+		} else {
+			keyDir = "/var/lib/cophi-auth"
+		}
 	}
 	keys, err := loadOrCreateKeyMaterial(keyDir)
 	if err != nil {
