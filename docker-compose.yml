@@ -2,7 +2,7 @@ version: "3.9"
 services:
   auth:
     container_name: 'cophi-auth-compose'
-    image: szenzaro/cophi-auth:0.0.12
+    image: szenzaro/cophi-auth:0.0.13
     build: .
     environment:
       PORT: 8000
