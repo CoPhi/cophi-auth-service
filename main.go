@@ -33,7 +33,7 @@ var (
 	ErrUnrecognizedUnit   = errors.New("unrecognized time unit")
 )
 
-const VERSION = "0.0.9"
+const VERSION = "0.0.10"
 
 //go:embed templates/*
 var templates embed.FS
@@ -121,7 +121,7 @@ func main() {
 	router.HandleFunc("/login/oauth", setReturnURL(gothic.BeginAuthHandler))
 	router.HandleFunc("/callback/oauth", oauthCallback(conf.rs256PrivKey, conf.domain, rts, conf.jwtExpiration))
 
-	handleSaml(router, &conf, rts)
+	// handleSaml(router, &conf, rts)
 
 	ctx := context.Background()
 
