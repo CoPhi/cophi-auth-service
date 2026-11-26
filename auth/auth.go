@@ -1,12 +1,12 @@
 package auth
 
 import (
-	"fmt"
 	"math/rand"
 	"net/http"
 	"time"
 
 	"github.com/CoPhi/cophi-auth-service/jwt"
+	"github.com/CoPhi/cophi-auth-service/logging"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 )
 
@@ -18,12 +18,12 @@ type AuthUser struct {
 type authHandler struct{ next http.Handler }
 
 func AuthCallback(returnURL string, rts refreshtoken.Store, u *AuthUser, privKey string, domain string, jwtExpiration time.Duration) func(w http.ResponseWriter, r *http.Request) {
+	logger := logging.Component("auth")
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		jwtToken, err := jwt.GenerateToken(u.Name, u.LastName, u.Email, jwtExpiration, privKey)
 		if err != nil {
-			fmt.Println("Error generating JWT Token")
-			fmt.Println(err)
+			logger.Error().Err(err).Msg("error generating JWT token")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

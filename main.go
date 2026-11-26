@@ -7,24 +7,27 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 
 	firebase "firebase.google.com/go"
 	"github.com/CoPhi/cophi-auth-service/apikey"
 	"github.com/CoPhi/cophi-auth-service/auth"
 	openapi "github.com/CoPhi/cophi-auth-service/go"
+	"github.com/CoPhi/cophi-auth-service/logging"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 	"github.com/CoPhi/cophi-auth-service/user"
 	"github.com/go-chi/cors"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/markbates/goth/gothic"
+	"github.com/rs/zerolog"
 )
 
 var (
@@ -33,7 +36,7 @@ var (
 	ErrUnrecognizedUnit   = errors.New("unrecognized time unit")
 )
 
-const VERSION = "0.0.13"
+const VERSION = "0.0.14"
 
 //go:embed templates/*
 var templates embed.FS
@@ -54,26 +57,30 @@ type conf struct {
 }
 
 func main() {
-	log.Println("CophiAUTH " + VERSION)
-
 	prodMode := os.Getenv("PROD")
 	if prodMode == "" {
-		log.Println("Loading local env from file")
-		err := godotenv.Load("local.env")
-		if err != nil {
-			log.Fatalf("Some error occured. Err: %s", err)
+		if err := godotenv.Load("local.env"); err != nil {
+			logging.Init(false)
+			logging.Component("main").Fatal().Err(err).Str("file", "local.env").Msg("failed to load local env file")
 		}
 	}
 
-	createFirebaseConfFile("firebase-conf.json", os.Getenv("FIREBASE_CONF"))
+	logging.Init(prodMode != "")
+	logger := logging.Component("main")
+	logger.Info().Str("version", VERSION).Bool("prod", prodMode != "").Msg("starting CophiAUTH")
+	if prodMode == "" {
+		logger.Debug().Str("file", "local.env").Msg("loaded local env from file")
+	}
+
+	createFirebaseConfFile("firebase-conf.json", os.Getenv("FIREBASE_CONF"), logger)
 
 	rtExpiration, err := parsePeriod(os.Getenv("REFRESH_TOKEN_EXPIRATION"))
 	if err != nil {
-		panic(err)
+		logger.Fatal().Err(err).Msg("invalid REFRESH_TOKEN_EXPIRATION")
 	}
 	jwtExpiration, err := parsePeriod(os.Getenv("JWT_EXPIRATION"))
 	if err != nil {
-		panic(err)
+		logger.Fatal().Err(err).Msg("invalid JWT_EXPIRATION")
 	}
 
 	conf := conf{
@@ -105,7 +112,7 @@ func main() {
 	}
 	keys, err := loadOrCreateKeyMaterial(keyDir)
 	if err != nil {
-		log.Fatalf("Unable to load auth keys from %s: %v", keyDir, err)
+		logger.Fatal().Err(err).Str("key_dir", keyDir).Msg("unable to load auth keys")
 	}
 	conf.rs256PrivKey = keys.jwtPrivate
 	conf.rs256PubKey = keys.jwtPublic
@@ -144,7 +151,7 @@ func main() {
 
 	app, err := firebase.NewApp(ctx, nil)
 	if err != nil {
-		log.Fatalf("error initializing app: %v\n", err)
+		logger.Fatal().Err(err).Msg("error initializing firebase app")
 	}
 	router.HandleFunc("/login/firebase", handleFirebase(app, ctx, conf.rs256PrivKey, conf.domain, rts, conf.jwtExpiration))
 
@@ -152,23 +159,47 @@ func main() {
 		AllowedOrigins:   conf.corsList,
 		AllowCredentials: true,
 	})
-	// start the web server
-	log.Println("Start listening")
-	log.Fatal(http.ListenAndServe(":"+conf.port, c.Handler(router)))
+
+	srv := &http.Server{
+		Addr:    ":" + conf.port,
+		Handler: c.Handler(router),
+	}
+
+	sigCtx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
+
+	go func() {
+		logger.Info().Str("addr", srv.Addr).Msg("start listening")
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Fatal().Err(err).Str("addr", srv.Addr).Msg("http server failed")
+		}
+	}()
+
+	<-sigCtx.Done()
+	logger.Info().Msg("shutting down server")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logger.Error().Err(err).Msg("graceful shutdown failed")
+	} else {
+		logger.Info().Msg("server stopped")
+	}
 }
 
-func createFirebaseConfFile(path, content string) {
+func createFirebaseConfFile(path, content string, logger *zerolog.Logger) {
 	err := os.WriteFile(path, []byte(content), 0644)
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal().Err(err).Str("path", path).Msg("failed to write firebase config file")
 	}
 }
 
 func handleFirebase(app *firebase.App, ctx context.Context, privKey, domain string, rts refreshtoken.Store, jwtExpiration time.Duration) func(w http.ResponseWriter, r *http.Request) {
+	logger := logging.Component("firebase")
 	return func(w http.ResponseWriter, r *http.Request) {
 		client, err := app.Auth(ctx)
 		if err != nil {
-			fmt.Println(err)
+			logger.Error().Err(err).Msg("failed to get firebase auth client")
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -178,19 +209,24 @@ func handleFirebase(app *firebase.App, ctx context.Context, privKey, domain stri
 		lastname := r.URL.Query().Get("lastname")
 
 		if idToken == "" || email == "" || name == "" || lastname == "" {
-			fmt.Printf("Empty user data: name-> %s, lastname-> %s, email-> %s, idToken-> %s", name, lastname, email, idToken)
+			logger.Warn().
+				Bool("has_token", idToken != "").
+				Bool("has_email", email != "").
+				Bool("has_name", name != "").
+				Bool("has_lastname", lastname != "").
+				Msg("empty user data in firebase login request")
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
 		token, err := client.VerifyIDToken(ctx, idToken)
 		if err != nil {
-			fmt.Println("Error verifying token " + idToken)
+			logger.Warn().Err(err).Msg("failed to verify firebase ID token")
 			w.WriteHeader(http.StatusForbidden)
 			return
 		}
 
-		log.Printf("Verified ID token: %v\n", token)
+		logger.Debug().Str("uid", token.UID).Msg("verified firebase ID token")
 
 		user := auth.AuthUser{
 			Name:     name,

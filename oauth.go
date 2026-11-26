@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/CoPhi/cophi-auth-service/auth"
+	"github.com/CoPhi/cophi-auth-service/logging"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 	"github.com/gorilla/sessions"
 	"github.com/markbates/goth"
@@ -28,9 +29,11 @@ func setupProviders(rootURL, googleClientID, googleSecret string) {
 }
 
 func oauthCallback(privKey, domain string, rts refreshtoken.Store, jwtExpiration time.Duration) func(w http.ResponseWriter, r *http.Request) {
+	logger := logging.Component("oauth")
 	return func(w http.ResponseWriter, r *http.Request) {
 		oauthUser, err := gothic.CompleteUserAuth(w, r)
 		if err != nil {
+			logger.Error().Err(err).Msg("oauth user auth failed")
 			fmt.Fprintln(w, err)
 			return
 		}
@@ -41,6 +44,7 @@ func oauthCallback(privKey, domain string, rts refreshtoken.Store, jwtExpiration
 		}
 		referer, err := r.Cookie("referer")
 		if err != nil {
+			logger.Warn().Err(err).Msg("missing referer cookie in oauth callback")
 			fmt.Fprintln(w, err)
 			return
 		}

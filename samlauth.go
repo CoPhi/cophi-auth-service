@@ -11,12 +11,14 @@ import (
 	"time"
 
 	"github.com/CoPhi/cophi-auth-service/auth"
+	"github.com/CoPhi/cophi-auth-service/logging"
 	"github.com/CoPhi/cophi-auth-service/refreshtoken"
 	"github.com/crewjam/saml"
 	"github.com/crewjam/saml/samlsp"
 )
 
 func samlSPCallback(privKey, domain string, rts refreshtoken.Store, jwtExpiration time.Duration) func(w http.ResponseWriter, r *http.Request) {
+	logger := logging.Component("saml")
 	return func(w http.ResponseWriter, r *http.Request) {
 		user := auth.AuthUser{
 			Name:     samlsp.AttributeFromContext(r.Context(), "givenName"),
@@ -32,6 +34,7 @@ func samlSPCallback(privKey, domain string, rts refreshtoken.Store, jwtExpiratio
 		})
 		referer, err := r.Cookie("referer")
 		if err != nil {
+			logger.Warn().Err(err).Msg("missing referer cookie in saml callback")
 			fmt.Fprintln(w, err)
 			return
 		}

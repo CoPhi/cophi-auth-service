@@ -1,16 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
-	"log"
 	"strings"
 	"time"
 
+	"github.com/CoPhi/cophi-auth-service/logging"
 	"github.com/dgrijalva/jwt-go"
 )
 
 func verify() {
+	logger := logging.Component("apikeys")
 	keyData, _ := ioutil.ReadFile("test/sample_key.pub")
 	key, _ := jwt.ParseRSAPublicKeyFromPEM(keyData)
 
@@ -21,7 +21,7 @@ func verify() {
 	method := jwt.GetSigningMethod("RS256")
 	err := method.Verify(strings.Join(parts[0:2], "."), parts[2], key)
 	if err != nil { // Invalid Token
-		log.Fatalf("Error while verifying key: %v", err)
+		logger.Fatal().Err(err).Msg("error while verifying key")
 	}
 }
 
@@ -33,6 +33,7 @@ type Claims struct {
 }
 
 func createToken() {
+	logger := logging.Component("apikeys")
 	expirationTime := time.Now().Add(5 * time.Minute)
 	// Create the JWT claims, which includes the username and expiry time
 	claims := &Claims{
@@ -56,7 +57,7 @@ func createToken() {
 	if err != nil {
 		panic("TODO")
 	}
-	fmt.Println(tokenString)
+	logger.Debug().Msg("signed JWT token")
 
 	publicKey, _ := ioutil.ReadFile("RS256.key.pub")
 	pubKey, err := jwt.ParseRSAPublicKeyFromPEM(publicKey)
@@ -74,28 +75,27 @@ func createToken() {
 	switch err.(type) {
 	case nil: // no error
 		if !parsedToken.Valid { // but may still be invalid
-			fmt.Println("Invalid")
+			logger.Warn().Msg("parsed token is invalid")
 			return
 		}
 
-		// see stdout and watch for the CustomUserInfo, nicely unmarshalled
-		log.Printf("Someone accessed resricted area! Token:%+v\n", token)
+		logger.Debug().Msg("accessed restricted area with valid token")
 
 	case *jwt.ValidationError: // something was wrong during the validation
 		vErr := err.(*jwt.ValidationError)
 
 		switch vErr.Errors {
 		case jwt.ValidationErrorExpired:
-			fmt.Println("Token Expired, get a new one.")
+			logger.Warn().Msg("token expired")
 			return
 
 		default:
-			fmt.Println("Error while Parsing Token!")
+			logger.Error().Err(err).Msg("error while parsing token")
 			return
 		}
 
 	default: // something else went wrong
-		fmt.Println("Error while Parsing Token!")
+		logger.Error().Err(err).Msg("error while parsing token")
 		return
 	}
 

@@ -19,6 +19,8 @@ COPY --from=builder /auth-service /auth-service
 RUN chown auth:auth /app
 
 ENV PROD=true
+ENV LOG_LEVEL=info
+ENV LOG_FORMAT=json
 ENV GSUI_PORT=3000
 
 ENV PORT=8000
